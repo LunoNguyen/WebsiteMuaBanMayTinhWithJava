@@ -1,0 +1,147 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutAdmin :: layout(~{::div.container-fluid})}"
+>
+  <body>
+    <div class="container-fluid px-4">
+      <div class="d-flex justify-content-between align-items-center mt-4 mb-4">
+        <div>
+          <h1 class="mb-0">Sản Phẩm Đã Bán</h1>
+          <div
+            class="text-muted"
+            th:text="'Tháng ' + ${Thang} + ' / ' + ${Nam}"
+          ></div>
+        </div>
+
+        <form
+          class="d-flex card p-2 shadow-sm"
+          th:action="@{/admin/thongke-sanpham}"
+          method="get"
+        >
+          <div class="input-group">
+            <span class="input-group-text bg-white border-0"
+              ><i class="fas fa-filter"></i
+            ></span>
+            <select
+              name="thang"
+              class="form-select border-0 fw-bold"
+              style="width: auto"
+            >
+              <option
+                th:each="i : ${#numbers.sequence(1, 12)}"
+                th:value="${i}"
+                th:text="'Tháng ' + ${i}"
+                th:selected="${Thang == i}"
+              ></option>
+            </select>
+            <select
+              name="nam"
+              class="form-select border-0 fw-bold"
+              style="width: auto"
+            >
+              <option
+                th:each="i : ${#numbers.sequence(2020, 2030)}"
+                th:value="${i}"
+                th:text="'Năm ' + ${i}"
+                th:selected="${Nam == i}"
+              ></option>
+            </select>
+            <button type="submit" class="btn btn-primary btn-sm ms-2">
+              Xem
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+          <div class="card bg-warning text-white h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="me-3">
+                  <div class="text-white-75 small">Tổng lượng bán ra</div>
+                  <div
+                    class="display-6 fw-bold"
+                    th:text="${TongSoLuongDaBan}"
+                  ></div>
+                </div>
+                <i class="fas fa-box-open fa-3x opacity-50"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header">
+          <i class="fas fa-list me-1"></i> Chi tiết từng sản phẩm
+        </div>
+        <div class="card-body">
+          <table
+            id="datatablesSimple"
+            class="table table-striped table-hover align-middle"
+          >
+            <thead class="table-dark text-center">
+              <tr>
+                <th>Ảnh</th>
+                <th>Tên sản phẩm</th>
+                <th>Doanh thu</th>
+                <th>Tồn kho hiện tại</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="item : ${DanhSachSP}">
+                <td class="text-center">
+                  <img
+                    th:src="@{/Content/HinhAnhPhongVu/{anh}(anh=${(item.sanPham.danhSachAnhs != null and !item.sanPham.danhSachAnhs.isEmpty()) ? item.sanPham.danhSachAnhs[0].tenAnh : 'no-image.jpg'})}"
+                    style="
+                      width: 50px;
+                      height: 50px;
+                      object-fit: contain;
+                      border: 1px solid #eee;
+                      padding: 2px;
+                      border-radius: 4px;
+                    "
+                    alt="Ảnh SP"
+                  />
+                </td>
+                <td>
+                  <div
+                    class="fw-bold text-primary"
+                    th:text="${item.sanPham.tenSP}"
+                  ></div>
+                  <small
+                    class="text-muted"
+                    th:text="'Mã: ' + ${item.sanPham.maSP}"
+                  ></small>
+                </td>
+                <td
+                  class="text-end text-success fw-bold"
+                  th:text="${#numbers.formatDecimal(item.thanhTien, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+                ></td>
+                <td class="text-center">
+                  <span
+                    th:if="${item.sanPham.soLuongTon == 0}"
+                    class="badge bg-danger"
+                    >Hết hàng</span
+                  >
+                  <span
+                    th:if="${item.sanPham.soLuongTon > 0 and item.sanPham.soLuongTon < 5}"
+                    class="badge bg-warning text-dark"
+                    th:text="'Sắp hết (' + ${item.sanPham.soLuongTon} + ')'"
+                  ></span>
+                  <span
+                    th:if="${item.sanPham.soLuongTon >= 5}"
+                    class="badge bg-secondary"
+                    th:text="'Còn: ' + ${item.sanPham.soLuongTon}"
+                  ></span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,50 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutTrangChu :: layout(~{::body})}"
+>
+  <head>
+    <title>Đặt hàng thành công</title>
+  </head>
+  <body>
+    <div class="container text-center py-5">
+      <div
+        class="card shadow-sm border-success mx-auto"
+        style="max-width: 600px"
+      >
+        <div class="card-body p-5">
+          <div class="mb-4">
+            <i
+              class="bi bi-check-circle-fill text-success"
+              style="font-size: 4rem"
+            ></i>
+          </div>
+
+          <h2 class="text-success mb-3">ĐẶT HÀNG THÀNH CÔNG!</h2>
+
+          <p class="lead mb-4">
+            Cảm ơn bạn đã mua sắm tại Phong Vũ.<br />
+            Đơn hàng của bạn đang được xử lý và sẽ sớm được giao đến địa chỉ đã
+            đăng ký.
+          </p>
+
+          <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+            <a
+              th:href="@{/trang-chu}"
+              class="btn btn-primary btn-lg px-4 gap-3"
+            >
+              <i class="bi bi-house-door-fill"></i> Về trang chủ
+            </a>
+
+            <a
+              th:href="@{/tai-khoan/lich-su-don-hang}"
+              class="btn btn-outline-secondary btn-lg px-4"
+            >
+              Xem lịch sử đơn hàng
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

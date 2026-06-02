@@ -1,0 +1,61 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutAdmin :: layout(~{::div.container-fluid})}"
+>
+  <body>
+    <div class="container-fluid px-4">
+      <h2 class="mt-4">Thêm nhân viên mới</h2>
+      <form th:action="@{/admin/them-tk-nhanvien}" method="post">
+        <div class="row">
+          <div class="col-md-6">
+            <label>Tên nhân viên</label>
+            <input type="text" name="TENNV" class="form-control" required />
+          </div>
+          <div class="col-md-6">
+            <label>Chức vụ</label>
+            <select name="MACV" class="form-control">
+              <option value="">Chọn chức vụ</option>
+              <option
+                th:each="cv : ${MACV}"
+                th:value="${cv.maCV}"
+                th:text="${cv.tenCV}"
+              ></option>
+            </select>
+          </div>
+        </div>
+        <div class="row mt-3">
+          <div class="col-md-6">
+            <label>Số điện thoại</label>
+            <input type="text" name="SDT_NV" class="form-control" />
+          </div>
+          <div class="col-md-6">
+            <label>Địa chỉ</label>
+            <input type="text" name="DIACHI_NV" class="form-control" />
+          </div>
+        </div>
+        <div class="row mt-3">
+          <div class="col-md-6">
+            <label>Email đăng nhập</label>
+            <input type="email" name="email" class="form-control" required />
+          </div>
+          <div class="col-md-6">
+            <label>Mật khẩu</label>
+            <input
+              type="password"
+              name="matkhau"
+              class="form-control"
+              required
+            />
+          </div>
+        </div>
+        <div class="mt-4">
+          <button type="submit" class="btn btn-primary">Thêm nhân viên</button>
+          <a th:href="@{/admin/ql-taikhoan}" class="btn btn-secondary"
+            >Quay lại</a
+          >
+        </div>
+      </form>
+    </div>
+  </body>
+</html>

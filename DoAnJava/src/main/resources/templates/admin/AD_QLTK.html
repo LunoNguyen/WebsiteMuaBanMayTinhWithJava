@@ -1,0 +1,157 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutAdmin :: layout(~{::div.container-fluid})}"
+>
+  <body>
+    <div class="container-fluid px-4">
+      <h1 class="mt-4">Quản lý Tài khoản</h1>
+      <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item">
+          <a th:href="@{/admin/trang-admin}">Tổng quan</a>
+        </li>
+        <li class="breadcrumb-item active">Quản lý Tài khoản</li>
+      </ol>
+
+      <div class="card mb-4 shadow-sm">
+        <div
+          class="card-header d-flex justify-content-between align-items-center"
+        >
+          <span class="fw-bold">Danh sách tài khoản</span>
+          <a th:href="@{/admin/them-tk-nhanvien}" class="btn btn-success btn-sm"
+            >Thêm tài khoản NV</a
+          >
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table
+              class="table table-bordered table-striped table-hover align-middle"
+            >
+              <thead class="table-dark text-center">
+                <tr>
+                  <th>Tài khoản (ID)</th>
+                  <th>Mã NV</th>
+                  <th>Mã KH</th>
+                  <th>Email</th>
+                  <th>Phân quyền</th>
+                  <th style="min-width: 250px">Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="item : ${QLTK}">
+                  <td class="fw-bold text-primary" th:text="${item.maTK}"></td>
+                  <td
+                    class="text-center"
+                    th:text="${item.maNV != null ? item.maNV : '-'}"
+                  ></td>
+                  <td
+                    class="text-center"
+                    th:text="${item.maKH != null ? item.maKH : '-'}"
+                  ></td>
+                  <td th:text="${item.emailTK}"></td>
+                  <td class="text-center">
+                    <span
+                      th:if="${item.loaiTaiKhoan == 'Admin'}"
+                      class="badge bg-danger"
+                      >Quản trị</span
+                    >
+                    <span
+                      th:if="${item.loaiTaiKhoan == 'NhanVien'}"
+                      class="badge bg-primary"
+                      >Nhân viên</span
+                    >
+                    <span
+                      th:if="${item.loaiTaiKhoan == 'KhachHang'}"
+                      class="badge bg-success"
+                      >Khách hàng</span
+                    >
+                  </td>
+                  <td class="text-center">
+                    <div
+                      class="d-flex justify-content-center align-items-center gap-1"
+                    >
+                      <form
+                        th:action="@{/admin/doi-loai-taikhoan}"
+                        method="post"
+                        class="d-flex"
+                      >
+                        <input
+                          type="hidden"
+                          name="matk"
+                          th:value="${item.maTK}"
+                        />
+                        <div class="input-group input-group-sm">
+                          <select
+                            name="loaiMoi"
+                            class="form-select"
+                            style="width: 110px"
+                          >
+                            <option
+                              value="KhachHang"
+                              th:selected="${item.loaiTaiKhoan == 'KhachHang'}"
+                            >
+                              Khách
+                            </option>
+                            <option
+                              value="NhanVien"
+                              th:selected="${item.loaiTaiKhoan == 'NhanVien'}"
+                            >
+                              NV
+                            </option>
+                            <option
+                              value="Admin"
+                              th:selected="${item.loaiTaiKhoan == 'Admin'}"
+                            >
+                              Admin
+                            </option>
+                          </select>
+                          <button
+                            type="submit"
+                            class="btn btn-warning text-dark fw-bold"
+                          >
+                            Lưu
+                          </button>
+                        </div>
+                      </form>
+
+                      <a
+                        th:href="@{/admin/sua-taikhoan/{id}(id=${item.maTK})}"
+                        class="btn btn-primary btn-sm ms-1"
+                        title="Sửa tài khoản"
+                        >Sửa</a
+                      >
+
+                      <th:block th:if="${item.maTK != session.UserID}">
+                        <form
+                          th:action="@{/admin/xoa-taikhoan/{id}(id=${item.maTK})}"
+                          method="post"
+                          class="d-inline"
+                        >
+                          <button
+                            type="submit"
+                            class="btn btn-danger btn-sm ms-1"
+                            title="Xóa tài khoản"
+                            onclick="
+                              return confirm(
+                                'Bạn có chắc chắn muốn xóa tài khoản này? Hành động này không thể hoàn tác.',
+                              );
+                            "
+                          >
+                            Xóa
+                          </button>
+                        </form>
+                      </th:block>
+                      <th:block th:unless="${item.maTK != session.UserID}">
+                        <span class="badge bg-secondary ms-1">Tôi</span>
+                      </th:block>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

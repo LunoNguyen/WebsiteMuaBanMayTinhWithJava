@@ -1,0 +1,148 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutTrangChu :: layout(~{::body})}"
+>
+  <head>
+    <title>Giỏ hàng của bạn</title>
+  </head>
+  <body>
+    <div
+      th:if="${thongBao != null}"
+      class="alert alert-warning alert-dismissible fade show"
+      role="alert"
+    >
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      <span th:text="${thongBao}"></span>
+      <button
+        type="button"
+        class="btn-close"
+        data-bs-dismiss="alert"
+        aria-label="Close"
+      ></button>
+    </div>
+
+    <div
+      th:if="${error != null}"
+      class="alert alert-danger alert-dismissible fade show"
+      role="alert"
+    >
+      <i class="fas fa-times-circle me-2"></i> <span th:text="${error}"></span>
+      <button
+        type="button"
+        class="btn-close"
+        data-bs-dismiss="alert"
+        aria-label="Close"
+      ></button>
+    </div>
+
+    <div class="container mt-5 mb-5">
+      <h2 class="text-center text-primary mb-4">GIỎ HÀNG CỦA BẠN</h2>
+
+      <div
+        th:if="${lstGioHang == null or lstGioHang.isEmpty()}"
+        class="text-center py-5"
+      >
+        <h4 class="text-muted mt-3">Giỏ hàng đang trống</h4>
+        <p class="text-muted">Bạn chưa thêm sản phẩm nào vào giỏ.</p>
+        <a th:href="@{/trang-chu}" class="btn btn-primary mt-3">
+          <i class="fas fa-shopping-bag"></i> Quay lại mua sắm ngay
+        </a>
+      </div>
+
+      <div th:unless="${lstGioHang == null or lstGioHang.isEmpty()}">
+        <table class="table table-bordered table-hover align-middle shadow-sm">
+          <thead class="table-dark text-center">
+            <tr>
+              <th>Mã SP</th>
+              <th>Sản phẩm</th>
+              <th>Ảnh</th>
+              <th>Đơn giá</th>
+              <th style="width: 160px">Số lượng</th>
+              <th>Thành tiền</th>
+              <th>Xóa</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="item : ${lstGioHang}">
+              <td class="text-center" th:text="${item.iMaSP}"></td>
+              <td th:text="${item.sTenSP}"></td>
+              <td class="text-center">
+                <img
+                  th:src="@{'/resources/HinhAnhPhongVu/' + ${item.sAnhBia}}"
+                  style="width: 80px; height: 80px; object-fit: contain"
+                />
+              </td>
+              <td
+                class="text-end"
+                th:text="${#numbers.formatDecimal(item.dDonGia, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+              ></td>
+
+              <td class="text-center">
+                <form th:action="@{/gio-hang/cap-nhat}" method="post">
+                  <input type="hidden" name="iMaSP" th:value="${item.iMaSP}" />
+                  <div class="input-group justify-content-center">
+                    <input
+                      type="number"
+                      min="1"
+                      max="10"
+                      name="txtSoLuong"
+                      th:value="${item.iSoLuong}"
+                      class="form-control text-center px-1"
+                    />
+                    <button
+                      type="submit"
+                      class="btn btn-outline-primary"
+                      title="Lưu số lượng mới"
+                    >
+                      Lưu
+                      <i class="fas fa-sync-alt"></i>
+                    </button>
+                  </div>
+                </form>
+              </td>
+
+              <td
+                class="text-end text-danger fw-bold"
+                th:text="${#numbers.formatDecimal(item.dThanhTien, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"
+              ></td>
+
+              <td class="text-center">
+                <a
+                  th:href="@{'/gio-hang/xoa?iMaSP=' + ${item.iMaSP}}"
+                  onclick="
+                    return confirm('Bạn có chắc muốn xóa sản phẩm này?');
+                  "
+                  class="btn btn-outline-danger btn-sm"
+                >
+                  <i class="fas fa-trash-alt"></i> Xóa
+                </a>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="table-secondary">
+              <td colspan="5" class="text-end fw-bold pt-3">TỔNG CỘNG:</td>
+              <td
+                colspan="2"
+                class="text-end text-danger fw-bold h4 pt-2 pe-4"
+                th:text="${#numbers.formatDecimal(TongTien, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"
+              ></td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <div class="d-flex justify-content-between mt-4">
+          <a th:href="@{/trang-chu}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Tiếp tục mua hàng
+          </a>
+          <div>
+            <a th:href="@{/gio-hang/dat-hang}" class="btn btn-success btn-lg">
+              <i class="fas fa-money-check-alt"></i> Thanh toán ngay
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

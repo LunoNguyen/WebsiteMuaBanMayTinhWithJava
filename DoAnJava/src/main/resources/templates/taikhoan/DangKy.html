@@ -1,0 +1,118 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutTrangChu :: layout(~{::body})}"
+>
+  <head>
+    <title>Đăng Ký Tài Khoản</title>
+  </head>
+  <body>
+    <section class="py-4">
+      <div class="container">
+        <div class="row d-flex justify-content-center align-items-center">
+          <div class="col-12 col-md-11 col-lg-9 col-xl-8">
+            <div
+              class="card bg-dark text-white shadow"
+              style="border-radius: 1rem"
+            >
+              <div class="card-body p-4 p-md-5 text-center">
+                <form
+                  th:action="@{/tai-khoan/xu-ly-dang-ky}"
+                  th:object="${dangKyDTO}"
+                  method="post"
+                >
+                  <h3 class="mb-4 fw-bold">Đăng Ký Tài Khoản</h3>
+
+                  <div
+                    th:if="${error != null}"
+                    class="alert alert-danger"
+                    th:text="${error}"
+                  ></div>
+
+                  <div data-mdb-input-init class="form-outline mb-3">
+                    <input
+                      type="email"
+                      th:field="*{email}"
+                      class="form-control form-control-lg"
+                      placeholder="Nhập Email"
+                    />
+                    <span
+                      th:if="${#fields.hasErrors('email')}"
+                      th:errors="*{email}"
+                      class="text-danger"
+                    ></span>
+                  </div>
+
+                  <div data-mdb-input-init class="form-outline mb-3">
+                    <input
+                      type="password"
+                      th:field="*{password}"
+                      class="form-control form-control-lg"
+                      placeholder="Mật Khẩu"
+                    />
+                    <span
+                      th:if="${#fields.hasErrors('password')}"
+                      th:errors="*{password}"
+                      class="text-danger"
+                    ></span>
+                  </div>
+
+                  <div data-mdb-input-init class="form-outline mb-4">
+                    <input
+                      type="password"
+                      th:field="*{confirmPassword}"
+                      class="form-control form-control-lg"
+                      placeholder="Nhập lại mật khẩu"
+                    />
+                    <span
+                      th:if="${#fields.hasErrors('confirmPassword')}"
+                      th:errors="*{confirmPassword}"
+                      class="text-danger"
+                    ></span>
+                  </div>
+
+                  <button
+                    data-mdb-button-init
+                    data-mdb-ripple-init
+                    class="btn btn-primary btn-lg btn-block w-100 mb-4"
+                    type="submit"
+                  >
+                    Đăng ký
+                  </button>
+
+                  <hr class="my-4 border-secondary" />
+
+                  <a
+                    class="btn btn-lg btn-block btn-primary w-100 mb-3 border-0"
+                    style="background-color: #dd4b39"
+                    href="#"
+                  >
+                    <i class="fab fa-google me-2"></i> Đăng ký với Google
+                  </a>
+                  <a
+                    class="btn btn-lg btn-block btn-primary w-100 border-0"
+                    style="background-color: #3b5998"
+                    href="#"
+                  >
+                    <i class="fab fa-facebook-f me-2"></i> Đăng ký với Facebook
+                  </a>
+
+                  <div class="mt-4">
+                    <p class="mb-0">
+                      Đã có tài khoản?
+                      <a
+                        th:href="@{/tai-khoan/dang-nhap}"
+                        class="text-white-50 fw-bold"
+                        >Đăng nhập ngay</a
+                      >
+                    </p>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

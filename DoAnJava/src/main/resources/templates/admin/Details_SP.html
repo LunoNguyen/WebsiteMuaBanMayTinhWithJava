@@ -1,0 +1,76 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutAdmin :: layout(~{::div.container-fluid})}"
+>
+  <body>
+    <div class="container-fluid px-4 mt-4">
+      <h2 class="w-100 text-center mb-4 text-primary">CHI TIẾT SẢN PHẨM</h2>
+      <div class="card shadow-lg border-0 rounded-lg">
+        <div class="card-body p-4">
+          <div class="row">
+            <div class="col-md-5">
+              <div class="text-center mb-3">
+                <img
+                  th:src="@{/Content/HinhAnhPhongVu/no-image.jpg}"
+                  class="img-fluid rounded-lg shadow-sm"
+                  style="
+                    max-height: 400px;
+                    object-fit: contain;
+                    background-color: #f8f9fa;
+                  "
+                />
+              </div>
+            </div>
+            <div class="col-md-7 border-left pl-4">
+              <h3
+                class="card-title text-success mb-4"
+                th:text="${sanPham.tenSP}"
+              ></h3>
+              <dl class="row dl-horizontal-custom">
+                <dt class="col-sm-5 text-muted">Đơn vị tính:</dt>
+                <dd class="col-sm-7" th:text="${sanPham.donVT}"></dd>
+
+                <dt class="col-sm-5 text-muted">Số lượng tồn:</dt>
+                <dd class="col-sm-7" th:text="${sanPham.soLuongTon}"></dd>
+
+                <dt class="col-sm-5 text-muted">Đơn giá bán:</dt>
+                <dd class="col-sm-7">
+                  <strong
+                    class="text-danger display-5"
+                    th:text="${#numbers.formatDecimal(sanPham.donGiaSP, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"
+                  ></strong>
+                </dd>
+
+                <dt class="col-sm-5 text-muted">Loại sản phẩm:</dt>
+                <dd
+                  class="col-sm-7"
+                  th:text="${sanPham.loaiSanPham?.tenLoai}"
+                ></dd>
+
+                <dt class="col-sm-5 text-muted">Nhà cung cấp:</dt>
+                <dd
+                  class="col-sm-7"
+                  th:text="${sanPham.nhaSanXuat?.tenNSX}"
+                ></dd>
+
+                <dt class="col-sm-5 text-muted">Mã NCC (từ Phiếu nhập):</dt>
+                <dd class="col-sm-7" th:text="${sanPham.maPNH}"></dd>
+              </dl>
+              <div class="mt-4 pt-3 border-top">
+                <a
+                  th:href="@{/admin/edit-sp/{id}(id=${sanPham.maSP})}"
+                  class="btn btn-warning mr-2"
+                  ><i class="fas fa-edit"></i> Sửa</a
+                >
+                <a th:href="@{/admin/ql-sanpham}" class="btn btn-secondary"
+                  ><i class="fas fa-arrow-left"></i> Quay lại</a
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

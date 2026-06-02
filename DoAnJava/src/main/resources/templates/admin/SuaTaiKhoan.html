@@ -1,0 +1,96 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutAdmin :: layout(~{::div.container-fluid})}"
+>
+  <body>
+    <div class="container-fluid px-4">
+      <h1 class="mt-4">Sửa tài khoản</h1>
+      <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item">
+          <a th:href="@{/admin/ql-taikhoan}">Quản lý tài khoản</a>
+        </li>
+        <li class="breadcrumb-item active">Sửa tài khoản</li>
+      </ol>
+
+      <div class="card mb-4">
+        <div class="card-header">
+          <i class="fas fa-user-edit"></i> Chỉnh sửa tài khoản:
+          <strong th:text="${taiKhoan.emailTK}"></strong>
+        </div>
+        <div class="card-body">
+          <form th:action="@{/admin/sua-taikhoan}" method="post">
+            <input type="hidden" name="MATK" th:value="${taiKhoan.maTK}" />
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label>Email đăng nhập</label>
+                  <input
+                    type="email"
+                    name="EMAIL_TK"
+                    class="form-control"
+                    required="required"
+                    th:value="${taiKhoan.emailTK}"
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label>Mật khẩu mới (để trống nếu không đổi)</label>
+                  <input
+                    type="password"
+                    name="matKhauMoi"
+                    class="form-control"
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label>Loại tài khoản (tự động theo chức vụ)</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    th:value="${taiKhoan.loaiTaiKhoan}"
+                    disabled
+                  />
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label>Nhân viên hiện tại</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    th:value="${NhanVienHienTai}"
+                    disabled
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label>Gán nhân viên</label>
+                  <select name="manvMoi" class="form-select">
+                    <option
+                      th:each="item : ${DSNhanVien}"
+                      th:value="${item.value}"
+                      th:text="${item.text}"
+                      th:selected="${item.selected}"
+                    ></option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Lưu thay đổi
+              </button>
+              <a th:href="@{/admin/ql-taikhoan}" class="btn btn-secondary ms-2">
+                <i class="fas fa-arrow-left"></i> Quay lại
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

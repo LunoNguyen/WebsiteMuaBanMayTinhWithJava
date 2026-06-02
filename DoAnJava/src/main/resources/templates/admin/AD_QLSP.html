@@ -1,0 +1,102 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutAdmin :: layout(~{::div.container-fluid})}"
+>
+  <body>
+    <div class="container-fluid px-4">
+      <h1 class="mt-4">Quản lý Sản phẩm</h1>
+      <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item">
+          <a th:href="@{/admin/trang-admin}">Tổng quan</a>
+        </li>
+        <li class="breadcrumb-item active">Danh sách Sản phẩm</li>
+      </ol>
+
+      <div class="card mb-4 shadow-sm">
+        <div
+          class="card-header d-flex justify-content-between align-items-center"
+        >
+          <span class="fw-bold">Danh sách Sản phẩm</span>
+          <a th:href="@{/admin/create-sp}" class="btn btn-primary btn-sm"
+            >Thêm mới</a
+          >
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table
+              class="table table-bordered table-striped table-hover align-middle"
+            >
+              <thead class="table-dark text-center">
+                <tr>
+                  <th>Mã SP</th>
+                  <th>Tên sản phẩm</th>
+                  <th>Giá bán</th>
+                  <th>Tồn kho</th>
+                  <th>Trạng thái</th>
+                  <th style="width: 250px">Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="item : ${QLSP}">
+                  <td class="text-center" th:text="${item.maSP}"></td>
+                  <td class="fw-bold text-primary" th:text="${item.tenSP}"></td>
+                  <td
+                    class="text-end fw-bold"
+                    th:text="${#numbers.formatDecimal(item.donGiaSP, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+                  ></td>
+                  <td class="text-center" th:text="${item.soLuongTon}"></td>
+                  <td class="text-center">
+                    <span
+                      th:if="${item.soLuongTon > 0}"
+                      class="badge bg-success"
+                      >Còn hàng</span
+                    >
+                    <span
+                      th:unless="${item.soLuongTon > 0}"
+                      class="badge bg-danger"
+                      >Hết hàng</span
+                    >
+                  </td>
+                  <td class="text-center">
+                    <div class="btn-group" role="group">
+                      <a
+                        th:href="@{/admin/edit-sp/{id}(id=${item.maSP})}"
+                        class="btn btn-warning btn-sm"
+                        title="Sửa"
+                        >Sửa</a
+                      >
+                      <a
+                        th:href="@{/admin/mota-sp/{id}(id=${item.maSP})}"
+                        class="btn btn-info btn-sm text-white ms-1"
+                        title="Mô tả"
+                        >Mô tả</a
+                      >
+                      <form
+                        th:action="@{/admin/xoa-sanpham/{id}(id=${item.maSP})}"
+                        method="post"
+                        class="d-inline"
+                      >
+                        <button
+                          type="submit"
+                          class="btn btn-danger btn-sm ms-1"
+                          onclick="
+                            return confirm(
+                              'Bạn có chắc chắn muốn xóa sản phẩm này?',
+                            );
+                          "
+                        >
+                          Xóa
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,117 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutTrangChu :: layout(~{::body})}"
+>
+  <head>
+    <title th:text="${sp.tenSP}">Chi Tiết Sản Phẩm</title>
+  </head>
+  <body>
+    <div class="container" style="margin-top: 20px">
+      <div class="row">
+        <div class="col-md-5">
+          <img
+            th:src="@{/Content/HinhAnhPhongVu/no-image.jpg}"
+            class="img-fluid border w-100"
+            th:alt="'Ảnh ' + ${sp.tenSP}"
+          />
+        </div>
+
+        <div class="col-md-7">
+          <h2 th:text="${sp.tenSP}"></h2>
+          <h3
+            style="color: red; margin-top: 20px"
+            th:text="${#numbers.formatDecimal(sp.donGiaSP, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+          ></h3>
+          <hr />
+
+          <div
+            th:with="moTa=${(sp.moTas != null and !sp.moTas.isEmpty()) ? sp.moTas[0] : null}"
+          >
+            <div th:if="${moTa != null}">
+              <h4>Thông số kỹ thuật</h4>
+              <table class="table table-striped">
+                <tbody>
+                  <tr>
+                    <td><strong>CPU</strong></td>
+                    <td th:text="${moTa.cpu}"></td>
+                  </tr>
+                  <tr>
+                    <td><strong>RAM</strong></td>
+                    <td th:text="${moTa.ram}"></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Ổ cứng (ROM)</strong></td>
+                    <td th:text="${moTa.rom}"></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Màn hình</strong></td>
+                    <td th:text="${moTa.manHinh}"></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Card đồ họa (VGA)</strong></td>
+                    <td th:text="${moTa.vga}"></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Khác</strong></td>
+                    <td th:text="${moTa.khac}"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div th:if="${moTa == null}" class="alert alert-warning">
+              Sản phẩm này hiện chưa có thông số kỹ thuật chi tiết.
+            </div>
+          </div>
+
+          <hr />
+          <a
+            th:href="@{'/gio-hang/them?iMaSP=' + ${sp.maSP}}"
+            class="btn btn-danger"
+          >
+            Thêm vào giỏ hàng
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <hr style="margin-top: 40px; margin-bottom: 40px" />
+
+    <div class="container">
+      <h3 style="color: #3455c5; margin-bottom: 20px">
+        Sản phẩm cùng nhà sản xuất
+      </h3>
+      <div class="row">
+        <div
+          th:each="item : ${SPcungNSX}"
+          class="col-3 flex-column"
+          style="padding-bottom: 10px"
+        >
+          <div class="card h-100">
+            <img
+              th:src="@{/Content/HinhAnhPhongVu/no-image.jpg}"
+              class="card-img-top border border-dark"
+              alt="Ảnh bìa"
+            />
+            <div class="card-body d-flex flex-column">
+              <h5
+                class="card-title"
+                style="color: #3455c5"
+                th:text="${#numbers.formatDecimal(item.donGiaSP, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+              ></h5>
+              <p
+                class="card-text"
+                th:text="${#strings.length(item.tenSP) > 40 ? #strings.substring(item.tenSP, 0, 40) + '...' : item.tenSP}"
+              ></p>
+              <a
+                th:href="@{'/chi-tiet-san-pham/' + ${item.maSP}}"
+                class="btn justify-content-sm-center border border-dark text-dark w-100 mt-auto"
+                >XEM CHI TIẾT</a
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

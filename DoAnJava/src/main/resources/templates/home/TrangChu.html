@@ -1,0 +1,100 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutTrangChu :: layout(~{::body})}"
+>
+  <head>
+    <title>Trang Chủ</title>
+  </head>
+  <body>
+    <div style="padding-bottom: 10px">
+      <img
+        th:src="@{/Content/HinhAnhPhongVu/chude_01.png}"
+        class="w-100"
+        style="
+          width: 1140px;
+          height: 260px;
+          border-radius: 10px;
+          align-items: center;
+          padding-top: 10px;
+        "
+      />
+      <div class="container my-4 p-4 bg-white rounded shadow-sm">
+        <div class="row">
+          <div class="col-12 mb-4">
+            <h5 class="fw-bold mb-3" style="color: #3456c4">
+              <i class="bi bi-star-fill text-warning me-2"></i>THƯƠNG HIỆU NỔI
+              BẬT
+            </h5>
+            <div class="d-flex flex-wrap gap-2">
+              <a
+                th:each="nsx : ${dsnsx}"
+                th:href="@{'/tim-kiem/nsx/' + ${nsx.maNSX}}"
+                class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-semibold"
+                th:text="${nsx.tenNSX}"
+              >
+              </a>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <h5 class="fw-bold mb-3" style="color: #3456c4">
+              <i class="bi bi-laptop me-2"></i>DANH MỤC SẢN PHẨM
+            </h5>
+            <div class="d-flex flex-wrap gap-2">
+              <a
+                th:each="lsp : ${dslsp}"
+                th:href="@{'/tim-kiem/loai/' + ${lsp.maLoai}}"
+                class="btn btn-outline-primary rounded-pill px-4 py-2 fw-semibold"
+                th:text="${lsp.tenLoai}"
+              >
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div
+        th:each="item : ${dssp}"
+        class="col-3 flex-column"
+        style="padding-bottom: 10px"
+      >
+        <div class="card">
+          <img
+            th:src="@{/Content/HinhAnhPhongVu/no-image.jpg}"
+            class="card-img-top border border-dark w-100"
+            style="height: 150px"
+            alt="Ảnh bìa"
+          />
+
+          <div class="card-body">
+            <h5
+              class="card-title"
+              style="color: #3455c5"
+              th:text="${#numbers.formatDecimal(item.donGiaSP, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+            ></h5>
+
+            <p
+              class="card-text"
+              th:if="${#strings.length(item.tenSP) > 25}"
+              th:text="${#strings.substring(item.tenSP, 0, 25)} + ' ...'"
+            ></p>
+            <p
+              class="card-text"
+              th:unless="${#strings.length(item.tenSP) > 25}"
+              th:text="${item.tenSP} + ' | ' + ${item.maSP}"
+            ></p>
+
+            <a
+              th:href="@{'/chi-tiet-san-pham/' + ${item.maSP}}"
+              class="btn justify-content-sm-center border border-dark text-dark w-100"
+              >XEM CHI TIẾT</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

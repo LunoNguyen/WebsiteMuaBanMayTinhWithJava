@@ -1,0 +1,60 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutAdmin :: layout(~{::div.container-fluid})}"
+>
+  <body>
+    <div class="container-fluid px-4">
+      <h1 class="mt-4">Quản lý Khách hàng</h1>
+      <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item">
+          <a th:href="@{/admin/trang-admin}">Tổng quan</a>
+        </li>
+        <li class="breadcrumb-item active">Danh sách Khách hàng</li>
+      </ol>
+
+      <div class="card mb-4 shadow-sm">
+        <div
+          class="card-header d-flex justify-content-between align-items-center"
+        >
+          <span class="fw-bold">Danh sách Khách hàng</span>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table
+              class="table table-bordered table-hover table-striped align-middle"
+            >
+              <thead class="table-dark text-center">
+                <tr>
+                  <th>ID</th>
+                  <th>Tên khách hàng</th>
+                  <th>Email</th>
+                  <th>Số điện thoại</th>
+                  <th>Địa chỉ</th>
+                  <th style="width: 180px">Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="item : ${QLKH}">
+                  <td class="text-center" th:text="${item.maKH}"></td>
+                  <td class="fw-bold" th:text="${item.tenKH}"></td>
+                  <td th:text="${item.emailKH}"></td>
+                  <td class="text-center" th:text="${item.sdtKH}"></td>
+                  <td th:text="${item.diaChiKH}"></td>
+                  <td class="text-center">
+                    <div class="btn-group" role="group">
+                      <a href="#" class="btn btn-info btn-sm text-white"
+                        >Chi tiết</a
+                      >
+                      <a href="#" class="btn btn-danger btn-sm ms-1">Khóa</a>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

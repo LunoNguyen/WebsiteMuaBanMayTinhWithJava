@@ -1,0 +1,51 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutAdmin :: layout(~{::div.container-fluid})}"
+>
+  <body>
+    <div class="container-fluid px-4">
+      <h1 class="mt-4 text-danger">
+        <i class="fas fa-exclamation-triangle"></i> Xác nhận xóa tài khoản
+      </h1>
+
+      <div class="card mt-4">
+        <div class="card-body">
+          <h5>Bạn có chắc chắn muốn xóa tài khoản sau?</h5>
+          <hr />
+          <dl class="row">
+            <dt class="col-sm-3">Email</dt>
+            <dd class="col-sm-9" th:text="${tk.emailTK}"></dd>
+
+            <dt class="col-sm-3">Loại tài khoản</dt>
+            <dd class="col-sm-9">
+              <span
+                th:class="'badge ' + (${tk.loaiTaiKhoan == 'Admin'} ? 'bg-danger' : (${tk.loaiTaiKhoan == 'NhanVien'} ? 'bg-primary' : 'bg-secondary'))"
+                th:text="${tk.loaiTaiKhoan}"
+              >
+              </span>
+            </dd>
+
+            <dt class="col-sm-3">Mã nhân viên</dt>
+            <dd
+              class="col-sm-9"
+              th:text="${tk.maNV != null ? tk.maNV : 'Không có'}"
+            ></dd>
+          </dl>
+
+          <div class="mt-4">
+            <form th:action="@{/admin/xoa-taikhoan}" method="post">
+              <input type="hidden" name="matk" th:value="${tk.maTK}" />
+              <button type="submit" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Có, xóa vĩnh viễn
+              </button>
+              <a th:href="@{/Admin/ql-taikhoan}" class="btn btn-secondary"
+                >Hủy, quay lại</a
+              >
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

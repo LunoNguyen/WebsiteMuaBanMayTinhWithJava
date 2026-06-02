@@ -1,0 +1,71 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutAdmin :: layout(~{::div.container-fluid})}"
+>
+  <body>
+    <div class="container-fluid px-4">
+      <h1 class="mt-4">Quản lý Nhân Viên</h1>
+      <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item">
+          <a th:href="@{/admin/trang-admin}">Tổng quan</a>
+        </li>
+        <li class="breadcrumb-item active">Danh sách Nhân Viên</li>
+      </ol>
+
+      <div class="card mb-4 shadow-sm">
+        <div
+          class="card-header d-flex justify-content-between align-items-center"
+        >
+          <span class="fw-bold">Danh sách nhân viên</span>
+          <a th:href="@{/admin/create-nv}" class="btn btn-primary btn-sm"
+            >Thêm mới</a
+          >
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table
+              class="table table-bordered table-striped table-hover align-middle"
+            >
+              <thead class="table-dark text-center">
+                <tr>
+                  <th>Mã NV</th>
+                  <th>Mã CV</th>
+                  <th>Họ và Tên</th>
+                  <th>Email</th>
+                  <th>Số điện thoại</th>
+                  <th>Địa chỉ</th>
+                  <th style="width: 150px">Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="item : ${QLNV}">
+                  <td class="text-center" th:text="${item.maNV}"></td>
+                  <td class="text-center" th:text="${item.maCV}"></td>
+                  <td class="fw-bold" th:text="${item.tenNV}"></td>
+                  <td th:text="${item.emailNV}"></td>
+                  <td th:text="${item.sdtNV}"></td>
+                  <td th:text="${item.diaChiNV}"></td>
+                  <td class="text-center">
+                    <div class="btn-group" role="group">
+                      <a
+                        th:href="@{/admin/edit-nv/{id}(id=${item.maNV})}"
+                        class="btn btn-warning btn-sm"
+                        >Sửa</a
+                      >
+                      <a
+                        th:href="@{/admin/delete-nv/{id}(id=${item.maNV})}"
+                        class="btn btn-danger btn-sm ms-1"
+                        >Xóa</a
+                      >
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

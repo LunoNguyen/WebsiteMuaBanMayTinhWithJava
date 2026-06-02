@@ -1,0 +1,59 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutAdmin :: layout(~{::div.container})}"
+>
+  <body>
+    <div class="container" style="padding: 20px">
+      <h3 class="mt-4">SAO LƯU VÀ KHÔI PHỤC</h3>
+
+      <div
+        th:if="${Msg != null}"
+        class="alert alert-success"
+        th:text="${Msg}"
+      ></div>
+      <div
+        th:if="${Err != null}"
+        class="alert alert-danger"
+        th:text="${Err}"
+      ></div>
+
+      <div
+        style="
+          margin-top: 20px;
+          border: 1px solid #ccc;
+          padding: 30px;
+          border-radius: 10px;
+        "
+      >
+        <form
+          th:action="@{/admin/thuc-hien-sao-luu}"
+          method="post"
+          style="display: inline"
+        >
+          <button type="submit" class="btn btn-primary btn-lg">
+            <i class="fas fa-download"></i> Sao Lưu
+          </button>
+        </form>
+
+        <form
+          th:action="@{/admin/thuc-hien-khoi-phuc}"
+          method="post"
+          style="display: inline; margin-left: 20px"
+        >
+          <button
+            type="submit"
+            class="btn btn-danger btn-lg"
+            onclick="
+              return confirm(
+                'Cảnh báo: Dữ liệu hiện tại sẽ bị xóa để thay thế bằng bản cũ. Bạn có chắc chắn không?',
+              );
+            "
+          >
+            <i class="fas fa-upload"></i> Khôi Phục dữ liệu
+          </button>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>

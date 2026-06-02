@@ -1,0 +1,57 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutTrangChu :: layout(~{::body})}"
+>
+  <head>
+    <title>Giới thiệu Phong Vũ</title>
+  </head>
+  <body>
+    <div class="about-section">
+      <div class="clean-card">
+        <div class="card-image-col">
+          <div class="logo-wrapper">
+            <img
+              th:src="@{/Content/HinhAnhPhongVu/logo_PhongVu.png}"
+              alt="Phong Vũ Logo"
+            />
+          </div>
+        </div>
+
+        <div class="card-content-col">
+          <span class="top-badge">VỀ CHÚNG TÔI</span>
+          <h1 class="main-heading">Phong Vũ Computer</h1>
+          <div class="sub-slogan">Chất lượng - Uy tín - Tận tâm</div>
+          <p class="description-text">
+            Hệ thống bán lẻ máy tính, linh kiện và thiết bị công nghệ hàng đầu
+            Việt Nam...
+          </p>
+
+          <div class="stats-row">
+            <div class="stat-box">
+              <h4>25+</h4>
+              <p>Năm Hoạt Động</p>
+            </div>
+            <div class="stat-box">
+              <h4>100%</h4>
+              <p>Hàng Chính Hãng</p>
+            </div>
+            <div class="stat-box">
+              <h4>24/7</h4>
+              <p>Hỗ Trợ Kỹ Thuật</p>
+            </div>
+          </div>
+
+          <div class="actions-row">
+            <a th:href="@{/trang-chu}" class="btn-primary btn">Xem Sản Phẩm</a>
+            <div class="social-list">
+              <a href="#"><i class="fab fa-facebook"></i></a>
+              <a href="#"><i class="fab fa-youtube"></i></a>
+              <a href="#"><i class="fas fa-store"></i></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

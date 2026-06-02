@@ -1,0 +1,118 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutAdmin :: layout(~{::div.container-fluid})}"
+>
+  <body>
+    <div class="container-fluid px-4 mt-4">
+      <h2 class="mb-4">CHỈNH SỬA SẢN PHẨM</h2>
+      <form th:action="@{/Admin/edit-sp}" method="post">
+        <input type="hidden" name="MASP" th:value="${sanPham.maSP}" />
+        <div class="form-horizontal bg-white p-4 shadow-sm border rounded">
+          <div class="form-group mb-3 row">
+            <label class="col-md-2 col-form-label fw-bold">Tên sản phẩm</label>
+            <div class="col-md-10">
+              <input
+                type="text"
+                name="TENSP"
+                class="form-control"
+                th:value="${sanPham.tenSP}"
+              />
+            </div>
+          </div>
+
+          <div class="form-group mb-3 row">
+            <label class="col-md-2 col-form-label fw-bold">Đơn vị tính</label>
+            <div class="col-md-10">
+              <input
+                type="text"
+                name="DONVT"
+                class="form-control"
+                th:value="${sanPham.donVT}"
+              />
+            </div>
+          </div>
+
+          <div class="form-group mb-3 row">
+            <label class="col-md-2 col-form-label fw-bold">Số lượng tồn</label>
+            <div class="col-md-10">
+              <input
+                type="number"
+                name="SOLUONGTON"
+                class="form-control"
+                th:value="${sanPham.soLuongTon}"
+              />
+            </div>
+          </div>
+
+          <div class="form-group mb-3 row">
+            <label class="col-md-2 col-form-label fw-bold">Đơn giá</label>
+            <div class="col-md-10">
+              <input
+                type="number"
+                name="DONGIA_SP"
+                class="form-control"
+                th:value="${sanPham.donGiaSP}"
+              />
+            </div>
+          </div>
+
+          <div class="form-group mb-3 row">
+            <label class="col-md-2 col-form-label fw-bold">Loại SP</label>
+            <div class="col-md-10">
+              <select name="MALOAI" class="form-select">
+                <option
+                  th:each="loai : ${dsLoai}"
+                  th:value="${loai.maLoai}"
+                  th:text="${loai.tenLoai}"
+                  th:selected="${loai.maLoai == sanPham.maLoai}"
+                ></option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group mb-3 row">
+            <label class="col-md-2 col-form-label fw-bold">Nhà Cung Cấp</label>
+            <div class="col-md-10">
+              <select name="MANCC" class="form-select">
+                <option
+                  th:each="ncc : ${dsNCC}"
+                  th:value="${ncc.maNCC}"
+                  th:text="${ncc.tenNCC}"
+                  th:selected="${ncc.maNCC == sanPham.maNCC}"
+                ></option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group mb-3 row">
+            <label class="col-md-2 col-form-label fw-bold">Nhà Sản Xuất</label>
+            <div class="col-md-10">
+              <select name="MANSX" class="form-select">
+                <option
+                  th:each="nsx : ${dsNSX}"
+                  th:value="${nsx.maNSX}"
+                  th:text="${nsx.tenNSX}"
+                  th:selected="${nsx.maNSX == sanPham.maNSX}"
+                ></option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group mt-4">
+            <div class="col-md-offset-2 col-md-10">
+              <button type="submit" class="btn btn-warning">
+                <i class="fas fa-save"></i> Lưu lại
+              </button>
+              <a
+                th:href="@{/admin/ql-sanpham}"
+                class="btn btn-default border ms-2"
+                >Quay lại danh sách</a
+              >
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>

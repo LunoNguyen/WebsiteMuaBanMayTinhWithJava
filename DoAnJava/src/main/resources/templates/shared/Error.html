@@ -1,0 +1,30 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Đã xảy ra lỗi</title>
+    <link
+      th:href="@{/Content/bootstrap/css/bootstrap.min.css}"
+      rel="stylesheet"
+    />
+  </head>
+  <body style="background-color: #f8f9fa">
+    <div class="container text-center mt-5">
+      <hgroup>
+        <h1 class="text-danger display-4">LỖI!</h1>
+        <h2 class="text-muted">
+          Đã xảy ra sự cố trong quá trình xử lý yêu cầu của bạn.
+        </h2>
+
+        <p class="mt-4" th:if="${message != null}">
+          <strong class="text-danger">Chi tiết: </strong>
+          <span th:text="${message}"></span>
+        </p>
+
+        <a th:href="@{/trang-chu}" class="btn btn-primary mt-4"
+          >Quay về trang chủ</a
+        >
+      </hgroup>
+    </div>
+  </body>
+</html>

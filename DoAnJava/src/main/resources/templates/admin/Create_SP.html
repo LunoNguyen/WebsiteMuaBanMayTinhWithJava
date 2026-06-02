@@ -1,0 +1,124 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutAdmin :: layout(~{::div.container-fluid})}"
+>
+  <body>
+    <div class="container-fluid px-4 mt-4">
+      <form
+        th:action="@{/admin/create-sp}"
+        method="post"
+        enctype="multipart/form-data"
+      >
+        <div class="form-horizontal bg-white p-4 shadow-sm border rounded">
+          <h4 class="text-center w-100 fw-bold mb-4">THÊM SẢN PHẨM</h4>
+          <hr />
+
+          <div class="form-group mb-3 row">
+            <label class="col-md-2 col-form-label fw-bold">Tên sản phẩm</label>
+            <div class="col-md-10">
+              <input type="text" name="TENSP" class="form-control" required />
+            </div>
+          </div>
+
+          <div class="form-group mb-3 row">
+            <label class="col-md-2 col-form-label fw-bold">Nhà cung cấp</label>
+            <div class="col-md-4">
+              <select name="MANCC" class="form-select">
+                <option
+                  th:each="ncc : ${dsNCC}"
+                  th:value="${ncc.maNCC}"
+                  th:text="${ncc.tenNCC}"
+                ></option>
+              </select>
+            </div>
+            <label class="col-md-2 col-form-label fw-bold text-end"
+              >Loại sản phẩm</label
+            >
+            <div class="col-md-4">
+              <select name="MALOAI" class="form-select">
+                <option
+                  th:each="loai : ${dsLoai}"
+                  th:value="${loai.maLoai}"
+                  th:text="${loai.tenLoai}"
+                ></option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group mb-3 row">
+            <label class="col-md-2 col-form-label fw-bold">Nhà sản xuất</label>
+            <div class="col-md-4">
+              <select name="MANSX" class="form-select">
+                <option
+                  th:each="nsx : ${dsNSX}"
+                  th:value="${nsx.maNSX}"
+                  th:text="${nsx.tenNSX}"
+                ></option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group mb-3 row">
+            <label class="col-md-2 col-form-label fw-bold">Ảnh bìa</label>
+            <div class="col-md-10">
+              <input
+                type="file"
+                name="ImageFile"
+                id="ImageFile"
+                accept="image/*"
+                class="form-control"
+              />
+            </div>
+          </div>
+
+          <div class="form-group mb-3 row">
+            <label class="col-md-2 col-form-label fw-bold">Đơn vị tính</label>
+            <div class="col-md-4">
+              <input
+                type="text"
+                name="DONVT"
+                class="form-control"
+                value="Cái"
+              />
+            </div>
+            <label class="col-md-2 col-form-label fw-bold text-end"
+              >Số lượng tồn</label
+            >
+            <div class="col-md-4">
+              <input
+                type="number"
+                name="SOLUONGTON"
+                class="form-control"
+                value="0"
+              />
+            </div>
+          </div>
+
+          <div class="form-group mb-3 row">
+            <label class="col-md-2 col-form-label fw-bold">Đơn giá</label>
+            <div class="col-md-10">
+              <input
+                type="number"
+                name="DONGIA_SP"
+                class="form-control"
+                value="0"
+              />
+            </div>
+          </div>
+
+          <div class="form-group mt-4">
+            <div class="col-md-offset-2 col-md-10">
+              <button type="submit" class="btn btn-primary px-4">
+                <i class="fas fa-plus"></i> Thêm mới
+              </button>
+              <a th:href="@{/admin/ql-sanpham}" class="btn btn-secondary ms-2"
+                >Hủy</a
+              >
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>

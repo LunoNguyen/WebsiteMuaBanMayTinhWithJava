@@ -1,0 +1,142 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutAdmin :: layout(~{::div.container-fluid})}"
+>
+  <body>
+    <div class="container-fluid px-4">
+      <h1 class="mt-4">Tổng Quan Hệ Thống</h1>
+      <ol class="breadcrumb mb-4">
+        <li
+          class="breadcrumb-item active"
+          th:text="'Số liệu kinh doanh tháng ' + ${Thang} + '/' + ${Nam}"
+        ></li>
+      </ol>
+
+      <div class="row">
+        <div class="col-xl-3 col-md-6">
+          <div class="card bg-primary text-white mb-4">
+            <div class="card-body">
+              <div>Doanh Thu</div>
+              <div
+                class="h3"
+                th:text="${#numbers.formatDecimal(TongDoanhThu, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+              ></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="card bg-warning text-white mb-4">
+            <div class="card-body">
+              <div>Sản Phẩm Đã Bán</div>
+              <div class="h3" th:text="${SoSanPhamBanRa}"></div>
+            </div>
+            <div
+              class="card-footer d-flex align-items-center justify-content-between"
+            >
+              <a
+                class="small text-white stretched-link"
+                th:href="@{/admin/thongke-sanpham}"
+                >Chi tiết</a
+              >
+              <div class="small text-white">
+                <i class="fas fa-angle-right"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="card bg-success text-white mb-4">
+            <div class="card-body">
+              <div>Đơn Hàng</div>
+              <div class="h3" th:text="${SoDonHang}"></div>
+            </div>
+            <div
+              class="card-footer d-flex align-items-center justify-content-between"
+            >
+              <a
+                class="small text-white stretched-link"
+                th:href="@{/admin/ql-donhang}"
+                >Chi tiết</a
+              >
+              <div class="small text-white">
+                <i class="fas fa-angle-right"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="card bg-danger text-white mb-4">
+            <div class="card-body">
+              <div>Khách Hàng</div>
+              <div class="h3" th:text="${SoKhachHang}"></div>
+            </div>
+            <div
+              class="card-footer d-flex align-items-center justify-content-between"
+            >
+              <a
+                class="small text-white stretched-link"
+                th:href="@{/admin/ql-khachhang}"
+                >Quản lý khách</a
+              >
+              <div class="small text-white">
+                <i class="fas fa-angle-right"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-xl-6">
+          <div class="card mb-4">
+            <div class="card-header">
+              <i class="fas fa-table me-1"></i>
+              Đơn hàng gần đây
+            </div>
+            <div class="card-body">
+              <table class="table table-striped table-bordered table-sm">
+                <thead>
+                  <tr>
+                    <th>Mã ĐH</th>
+                    <th>Khách hàng</th>
+                    <th>Ngày lập</th>
+                    <th>Tổng tiền</th>
+                    <th>Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr th:each="item : ${DonHangMoi}">
+                    <td th:text="${item.maHD}"></td>
+                    <td
+                      th:text="${item.khachHang != null ? item.khachHang.tenKH : 'Khách vãng lai'}"
+                    ></td>
+                    <td
+                      th:text="${#temporals.format(item.ngayLap, 'dd/MM/yyyy')}"
+                    ></td>
+                    <td
+                      class="text-end"
+                      th:text="${#numbers.formatDecimal(item.tongTienHD, 0, 'COMMA', 0, 'POINT')}"
+                    ></td>
+                    <td>
+                      <span
+                        th:if="${item.trangThaiTT == 'Đã thanh toán'}"
+                        class="badge bg-success"
+                        th:text="${item.trangThaiTT}"
+                      ></span>
+                      <span
+                        th:unless="${item.trangThaiTT == 'Đã thanh toán'}"
+                        class="badge bg-warning text-dark"
+                        th:text="${item.trangThaiTT}"
+                      ></span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

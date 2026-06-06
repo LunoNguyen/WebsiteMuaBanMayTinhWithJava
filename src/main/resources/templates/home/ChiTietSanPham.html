@@ -6,132 +6,485 @@
   <head>
     <title th:text="${sp.tenSP}">Chi Tiết Sản Phẩm</title>
   </head>
+
   <body>
-    <div class="container" style="margin-top: 20px">
-      <div class="row">
-        <div class="col-md-5">
-          <img
-            th:if="${not #lists.isEmpty(sp.danhSachAnhs)}"
-            th:src="@{'/Content/HinhAnhPhongVu/' + ${sp.danhSachAnhs[0].tenAnh}}"
-            class="card-img-top border border-dark w-100"
-            style="height: 350px; object-fit: contain"
-            alt="Ảnh sản phẩm"
-          />
+    <style>
+      body {
+        background-color: #f5f6fa;
+      }
 
-          <img
-            th:unless="${not #lists.isEmpty(sp.danhSachAnhs)}"
-            th:src="@{/Content/HinhAnhPhongVu/no-image.jpg}"
-            class="card-img-top border border-dark w-100"
-            style="height: 350px; object-fit: contain; opacity: 0.5"
-            alt="No Image"
-          />
-        </div>
+      .product-detail-wrapper {
+        margin-top: 30px;
+        margin-bottom: 40px;
+      }
 
-        <div class="col-md-7">
-          <h2 th:text="${sp.tenSP}"></h2>
-          <h3
-            style="color: red; margin-top: 20px"
-            th:text="${#numbers.formatDecimal(sp.donGiaSP, 0, 'COMMA', 0, 'POINT')} + ' đ'"
-          ></h3>
-          <hr />
+      .product-detail-card {
+        background-color: #ffffff;
+        border-radius: 18px;
+        padding: 28px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+      }
 
-          <div
-            th:with="moTa=${(sp.moTas != null and !sp.moTas.isEmpty()) ? sp.moTas[0] : null}"
-          >
-            <div th:if="${moTa != null}">
-              <h4>Thông số kỹ thuật</h4>
-              <table class="table table-striped">
-                <tbody>
-                  <tr>
-                    <td><strong>CPU</strong></td>
-                    <td th:text="${moTa.cpu}"></td>
-                  </tr>
-                  <tr>
-                    <td><strong>RAM</strong></td>
-                    <td th:text="${moTa.ram}"></td>
-                  </tr>
-                  <tr>
-                    <td><strong>Ổ cứng (ROM)</strong></td>
-                    <td th:text="${moTa.rom}"></td>
-                  </tr>
-                  <tr>
-                    <td><strong>Màn hình</strong></td>
-                    <td th:text="${moTa.manHinh}"></td>
-                  </tr>
-                  <tr>
-                    <td><strong>Card đồ họa (VGA)</strong></td>
-                    <td th:text="${moTa.vga}"></td>
-                  </tr>
-                  <tr>
-                    <td><strong>Khác</strong></td>
-                    <td th:text="${moTa.khac}"></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div th:if="${moTa == null}" class="alert alert-warning">
-              Sản phẩm này hiện chưa có thông số kỹ thuật chi tiết.
-            </div>
-          </div>
+      .main-img-box {
+        width: 100%;
+        height: 420px;
+        background-color: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
 
-          <hr />
-          <a
-            th:href="@{'/gio-hang/them?iMaSP=' + ${sp.maSP}}"
-            class="btn btn-danger"
-          >
-            Thêm vào giỏ hàng
-          </a>
-        </div>
-      </div>
-    </div>
+      .main-product-img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important;
+        display: block;
+      }
 
-    <hr style="margin-top: 40px; margin-bottom: 40px" />
+      .product-title {
+        font-size: 30px;
+        font-weight: 700;
+        color: #1f2937;
+        line-height: 1.35;
+        margin-bottom: 14px;
+      }
 
-    <div class="container">
-      <h3 style="color: #3455c5; margin-bottom: 20px">
-        Sản phẩm cùng nhà sản xuất
-      </h3>
-      <div class="row">
-        <div
-          th:each="item : ${SPcungNSX}"
-          class="col-3 flex-column"
-          style="padding-bottom: 10px"
-        >
-          <div class="card h-100">
-            <div class="card h-100">
+      .product-code {
+        display: inline-block;
+        background-color: #eef2ff;
+        color: #3456c4;
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 16px;
+      }
+
+      .product-price {
+        color: #dc3545;
+        font-size: 32px;
+        font-weight: 800;
+        margin: 16px 0;
+      }
+
+      .product-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+
+      .meta-badge {
+        background-color: #f3f4f6;
+        color: #374151;
+        padding: 8px 14px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .spec-card {
+        margin-top: 20px;
+        border-radius: 14px;
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+      }
+
+      .spec-title {
+        background-color: #3456c4;
+        color: #ffffff;
+        padding: 13px 18px;
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .spec-table {
+        margin-bottom: 0;
+      }
+
+      .spec-table td {
+        padding: 13px 18px;
+        vertical-align: middle;
+      }
+
+      .spec-table td:first-child {
+        width: 180px;
+        font-weight: 700;
+        color: #374151;
+        background-color: #f9fafb;
+      }
+
+      .add-cart-btn {
+        height: 48px;
+        border-radius: 12px;
+        padding: 0 28px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+      }
+
+      .add-cart-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 18px rgba(220, 53, 69, 0.28);
+      }
+
+      .back-btn {
+        height: 48px;
+        border-radius: 12px;
+        padding: 0 24px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .related-section {
+        margin-bottom: 50px;
+      }
+
+      .section-title {
+        color: #3456c4;
+        font-size: 24px;
+        font-weight: 800;
+        margin-bottom: 22px;
+      }
+
+      .related-card {
+        width: 100%;
+        height: 355px;
+        border-radius: 15px;
+        border: 1px solid #e5e7eb;
+        background-color: #ffffff;
+        overflow: hidden;
+        transition: all 0.25s ease;
+      }
+
+      .related-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+        border-color: #3456c4;
+      }
+
+      .related-img-box {
+        width: 100%;
+        height: 170px;
+        background-color: #ffffff;
+        padding: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .related-img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important;
+        display: block;
+      }
+
+      .related-body {
+        height: 185px;
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .related-price {
+        color: #dc3545;
+        font-size: 18px;
+        font-weight: 800;
+        margin-bottom: 8px;
+      }
+
+      .related-name {
+        font-size: 15px;
+        color: #212529;
+        line-height: 1.4;
+        margin-bottom: 5px;
+
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 42px;
+      }
+
+      .related-code {
+        font-size: 13px;
+        color: #6c757d;
+      }
+
+      .related-btn {
+        height: 38px;
+        border-radius: 9px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+      }
+
+      .related-btn:hover {
+        background-color: #3456c4;
+        color: white !important;
+        border-color: #3456c4 !important;
+      }
+
+      .empty-alert {
+        border-radius: 14px;
+        padding: 18px;
+      }
+
+      @media (max-width: 768px) {
+        .product-detail-card {
+          padding: 18px;
+        }
+
+        .main-img-box {
+          height: 300px;
+          margin-bottom: 20px;
+        }
+
+        .product-title {
+          font-size: 24px;
+        }
+
+        .product-price {
+          font-size: 26px;
+        }
+
+        .spec-table td:first-child {
+          width: 130px;
+        }
+
+        .related-card {
+          height: 340px;
+        }
+
+        .related-img-box {
+          height: 160px;
+        }
+
+        .related-body {
+          height: 180px;
+        }
+      }
+    </style>
+
+    <div class="container product-detail-wrapper">
+      <div class="product-detail-card">
+        <div class="row g-4 align-items-start">
+          <div class="col-md-5">
+            <div class="main-img-box">
               <img
-                th:if="${not #lists.isEmpty(item.danhSachAnhs)}"
-                th:src="@{'/Content/HinhAnhPhongVu/' + ${item.danhSachAnhs[0].tenAnh}}"
-                class="card-img-top border border-dark"
-                style="height: 150px; object-fit: cover"
+                th:if="${sp.danhSachAnhs != null and !sp.danhSachAnhs.isEmpty()}"
+                th:src="@{'/Content/HinhAnhPhongVu/' + ${sp.danhSachAnhs[0].tenAnh}}"
+                class="main-product-img"
                 alt="Ảnh sản phẩm"
               />
 
               <img
-                th:unless="${not #lists.isEmpty(item.danhSachAnhs)}"
+                th:unless="${sp.danhSachAnhs != null and !sp.danhSachAnhs.isEmpty()}"
                 th:src="@{/Content/HinhAnhPhongVu/no-image.jpg}"
-                class="card-img-top border border-dark"
-                style="height: 150px; object-fit: cover; opacity: 0.5"
+                class="main-product-img"
+                style="opacity: 0.55"
                 alt="No Image"
               />
-
-              <div class="card-body d-flex flex-column"></div>
             </div>
-            <div class="card-body d-flex flex-column">
-              <h5
-                class="card-title"
-                style="color: #3455c5"
-                th:text="${#numbers.formatDecimal(item.donGiaSP, 0, 'COMMA', 0, 'POINT')} + ' đ'"
-              ></h5>
-              <p
-                class="card-text"
-                th:text="${#strings.length(item.tenSP) > 40 ? #strings.substring(item.tenSP, 0, 40) + '...' : item.tenSP}"
-              ></p>
+          </div>
+
+          <div class="col-md-7">
+            <h2 class="product-title" th:text="${sp.tenSP}">
+              Tên sản phẩm
+            </h2>
+
+            <div class="product-code" th:text="'Mã sản phẩm: ' + ${sp.maSP}">
+              Mã sản phẩm
+            </div>
+
+            <div
+              class="product-price"
+              th:text="${#numbers.formatDecimal(sp.donGiaSP, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+            >
+              0 đ
+            </div>
+
+            <div class="product-meta">
+              <span
+                class="meta-badge"
+                th:if="${sp.loaiSanPham != null}"
+                th:text="'Danh mục: ' + ${sp.loaiSanPham.tenLoai}"
+              >
+                Danh mục
+              </span>
+
+              <span
+                class="meta-badge"
+                th:if="${sp.nhaSanXuat != null}"
+                th:text="'Thương hiệu: ' + ${sp.nhaSanXuat.tenNSX}"
+              >
+                Thương hiệu
+              </span>
+
+              <span
+                class="meta-badge"
+                th:if="${sp.soLuongTon != null and sp.soLuongTon > 0}"
+                th:text="'Còn hàng: ' + ${sp.soLuongTon}"
+              >
+                Còn hàng
+              </span>
+
+              <span
+                class="meta-badge"
+                th:if="${sp.soLuongTon == null or sp.soLuongTon == 0}"
+                style="background-color: #fee2e2; color: #b91c1c"
+              >
+                Hết hàng
+              </span>
+            </div>
+
+            <div
+              th:with="moTa=${(sp.moTas != null and !sp.moTas.isEmpty()) ? sp.moTas[0] : null}"
+            >
+              <div th:if="${moTa != null}" class="spec-card">
+                <div class="spec-title">Thông số kỹ thuật</div>
+
+                <table class="table table-striped spec-table">
+                  <tbody>
+                    <tr>
+                      <td>CPU</td>
+                      <td th:text="${moTa.cpu != null ? moTa.cpu : 'Đang cập nhật'}">
+                        Đang cập nhật
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td>RAM</td>
+                      <td th:text="${moTa.ram != null ? moTa.ram : 'Đang cập nhật'}">
+                        Đang cập nhật
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td>Ổ cứng</td>
+                      <td th:text="${moTa.rom != null ? moTa.rom : 'Đang cập nhật'}">
+                        Đang cập nhật
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td>Màn hình</td>
+                      <td th:text="${moTa.manHinh != null ? moTa.manHinh : 'Đang cập nhật'}">
+                        Đang cập nhật
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td>VGA</td>
+                      <td th:text="${moTa.vga != null ? moTa.vga : 'Đang cập nhật'}">
+                        Đang cập nhật
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td>Khác</td>
+                      <td th:text="${moTa.khac != null ? moTa.khac : 'Đang cập nhật'}">
+                        Đang cập nhật
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div th:if="${moTa == null}" class="alert alert-warning empty-alert mt-3">
+                Sản phẩm này hiện chưa có thông số kỹ thuật chi tiết.
+              </div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-3 mt-4">
+              <a
+                th:href="@{'/gio-hang/them?iMaSP=' + ${sp.maSP}}"
+                class="btn btn-danger add-cart-btn"
+              >
+                Thêm vào giỏ hàng
+              </a>
+
+              <a th:href="@{/trang-chu}" class="btn btn-outline-secondary back-btn">
+                Quay lại trang chủ
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container related-section">
+      <h3 class="section-title">Sản phẩm cùng nhà sản xuất</h3>
+
+      <div
+        th:if="${SPcungNSX == null or SPcungNSX.isEmpty()}"
+        class="alert alert-info empty-alert"
+      >
+        Hiện chưa có sản phẩm cùng nhà sản xuất.
+      </div>
+
+      <div
+        th:if="${SPcungNSX != null and !SPcungNSX.isEmpty()}"
+        class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4"
+      >
+        <div th:each="item : ${SPcungNSX}" class="col d-flex">
+          <div class="card related-card">
+            <div class="related-img-box">
+              <img
+                th:if="${item.danhSachAnhs != null and !item.danhSachAnhs.isEmpty()}"
+                th:src="@{'/Content/HinhAnhPhongVu/' + ${item.danhSachAnhs[0].tenAnh}}"
+                class="related-img"
+                alt="Ảnh sản phẩm"
+              />
+
+              <img
+                th:unless="${item.danhSachAnhs != null and !item.danhSachAnhs.isEmpty()}"
+                th:src="@{/Content/HinhAnhPhongVu/no-image.jpg}"
+                class="related-img"
+                style="opacity: 0.55"
+                alt="No Image"
+              />
+            </div>
+
+            <div class="card-body related-body">
+              <div>
+                <div
+                  class="related-price"
+                  th:text="${#numbers.formatDecimal(item.donGiaSP, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+                >
+                  0 đ
+                </div>
+
+                <div class="related-name" th:text="${item.tenSP}">
+                  Tên sản phẩm
+                </div>
+
+                <div class="related-code" th:text="'Mã SP: ' + ${item.maSP}">
+                  Mã SP
+                </div>
+              </div>
+
               <a
                 th:href="@{'/chi-tiet-san-pham/' + ${item.maSP}}"
-                class="btn justify-content-sm-center border border-dark text-dark w-100 mt-auto"
-                >XEM CHI TIẾT</a
+                class="btn border border-dark text-dark w-100 related-btn"
               >
+                XEM CHI TIẾT
+              </a>
             </div>
           </div>
         </div>

@@ -51,12 +51,20 @@ public class HomeController {
     @GetMapping("/chi-tiet-san-pham/{id}")
     public String chiTietSanPham(@PathVariable String id, Model model) {
         SanPham sp = sanPhamRepository.findById(id).orElse(null);
+
         if (sp == null) {
-            return "redirect:/trang-chu"; // HttpNotFound
+            return "redirect:/trang-chu";
         }
-        
-        List<SanPham> spCungNSX = sanPhamRepository.findByMaNSX(sp.getMaNSX());
-        List<SanPham> spCungLSP = sanPhamRepository.findByMaLoai(sp.getMaLoai());
+
+        List<SanPham> spCungNSX = sanPhamRepository.findByMaNSX(sp.getMaNSX())
+                .stream()
+                .filter(item -> !item.getMaSP().equals(sp.getMaSP()))
+                .toList();
+
+        List<SanPham> spCungLSP = sanPhamRepository.findByMaLoai(sp.getMaLoai())
+                .stream()
+                .filter(item -> !item.getMaSP().equals(sp.getMaSP()))
+                .toList();
 
         model.addAttribute("sp", sp);
         model.addAttribute("SPcungNSX", spCungNSX);
@@ -68,15 +76,12 @@ public class HomeController {
     @PostMapping("/tim-kiem")
     public String xuLyTimKiem(@RequestParam("txtTuKhoa") String txtTuKhoa, Model model) {
         List<SanPham> dssp = sanPhamRepository.findByTenSPContainingAndSoLuongTonGreaterThanEqual(txtTuKhoa, 0);
-        model.addAttribute("dssp", dssp);
-        return "home/TrangChu";
-    }
 
-    @GetMapping("/logout")
-    public String logOut(HttpSession session) {
-        // Xóa Session tương đương Session.Clear()
-        session.invalidate(); 
-        return "redirect:/trang-chu";
+        model.addAttribute("dssp", dssp);
+        model.addAttribute("dsnsx", nhaSanXuatRepository.findAll());
+        model.addAttribute("dslsp", loaiSanPhamRepository.findAll());
+
+        return "home/TrangChu";
     }
 
     // Bắt sự kiện click vào Thương Hiệu (Nhà Sản Xuất)

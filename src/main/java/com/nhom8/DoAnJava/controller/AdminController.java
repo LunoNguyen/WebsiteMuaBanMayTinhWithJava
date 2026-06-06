@@ -1,7 +1,14 @@
 package com.nhom8.DoAnJava.controller;
 
+import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.util.Map;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -20,6 +27,10 @@ import com.nhom8.DoAnJava.model.MoTa;
 import com.nhom8.DoAnJava.model.NhanVien;
 import com.nhom8.DoAnJava.model.SanPham;
 import com.nhom8.DoAnJava.model.TaiKhoan;
+import com.nhom8.DoAnJava.model.CapNhatGia;
+import com.nhom8.DoAnJava.model.DanhSachAnh;
+import com.nhom8.DoAnJava.repository.DanhSachAnhRepository;
+import com.nhom8.DoAnJava.repository.CapNhatGiaRepository;
 import com.nhom8.DoAnJava.repository.HoaDonRepository;
 import com.nhom8.DoAnJava.repository.KhachHangRepository;
 import com.nhom8.DoAnJava.repository.LoaiSanPhamRepository;
@@ -43,6 +54,8 @@ public class AdminController {
     @Autowired private LoaiSanPhamRepository loaiSanPhamRepository;
     @Autowired private NhaSanXuatRepository nhaSanXuatRepository;
     @Autowired private NhaCungCapRepository nhaCungCapRepository;
+    @Autowired private CapNhatGiaRepository capNhatGiaRepository;
+    @Autowired private DanhSachAnhRepository danhSachAnhRepository;
 
     // 1. TRANG DASHBOARD ADMIN MAIN
     @GetMapping("/trang-admin")
@@ -114,15 +127,76 @@ public class AdminController {
     }
 
     @PostMapping("/create-sp")
-    public String createSanPhamPost(@ModelAttribute SanPham sanPham, RedirectAttributes redirectAttributes) {
+    @Transactional
+    public String createSanPhamPost(
+            @ModelAttribute SanPham sanPham,
+            @RequestParam(value = "fileAnhs", required = false) MultipartFile[] fileAnhs,
+            RedirectAttributes redirectAttributes) {
+
         try {
-            // Có thể dùng adminService.generateMaSP() để tự tạo mã nếu form không nhập mã
-            sanPham.setMaSP(adminService.generateMaSP()); 
+            String maSP = adminService.generateMaSP();
+            LocalDateTime ngayCN = LocalDateTime.now();
+
+            CapNhatGia capNhatGia = new CapNhatGia();
+            capNhatGia.setNgayCN(ngayCN);
+            capNhatGia.setDonGiaCN(sanPham.getDonGiaSP());
+            capNhatGiaRepository.save(capNhatGia);
+
+            sanPham.setMaSP(maSP);
+            sanPham.setNgayCN(ngayCN);
+
+            if (sanPham.getSoLuongTon() == null) {
+                sanPham.setSoLuongTon(0);
+            }
+
+            if (sanPham.getDonVT() == null || sanPham.getDonVT().trim().isEmpty()) {
+                sanPham.setDonVT("Cái");
+            }
+
             sanPhamRepository.save(sanPham);
-            redirectAttributes.addFlashAttribute("Success", "Thêm sản phẩm thành công!");
+
+            if (fileAnhs != null && fileAnhs.length > 0) {
+                Path uploadDir = Paths.get("src/main/resources/static/Content/HinhAnhPhongVu");
+                Files.createDirectories(uploadDir);
+
+                int index = 1;
+
+                for (MultipartFile file : fileAnhs) {
+                    if (file == null || file.isEmpty()) {
+                        continue;
+                    }
+
+                    String originalName = file.getOriginalFilename();
+                    String extension = layDuoiFile(originalName);
+
+                    String tenAnh = maSP + "_" + String.format("%02d", index) + extension;
+
+                    Path filePath = uploadDir.resolve(tenAnh);
+                    Files.write(filePath, file.getBytes());
+
+                    DanhSachAnh anh = new DanhSachAnh();
+                    anh.setMaDsa(generateMaDSA());
+                    anh.setSanPham(sanPham);
+                    anh.setTenAnh(tenAnh);
+
+                    danhSachAnhRepository.save(anh);
+
+                    index++;
+                }
+            }
+
+            redirectAttributes.addFlashAttribute(
+                    "Success",
+                    "Thêm sản phẩm thành công! Mã sản phẩm: " + maSP
+            );
+
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("Error", "Lỗi thêm sản phẩm: " + e.getMessage());
+            redirectAttributes.addFlashAttribute(
+                    "Error",
+                    "Lỗi thêm sản phẩm: " + e.getMessage()
+            );
         }
+
         return "redirect:/admin/ql-sanpham";
     }
 
@@ -455,5 +529,108 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("Error", "Lỗi Khóa Ngoại! Sản phẩm này đã tồn tại trong Chi Tiết Đơn Hàng!");
         }
         return "redirect:ql-sanpham";
+    }
+
+    @GetMapping("/details-sp/{id}")
+    public String detailsSanPhamView(
+            @PathVariable("id") String id,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        SanPham sp = sanPhamRepository.findById(id).orElse(null);
+
+        if (sp == null) {
+            redirectAttributes.addFlashAttribute("Error", "Không tìm thấy sản phẩm!");
+            return "redirect:/admin/ql-sanpham";
+        }
+
+        model.addAttribute("sanPham", sp);
+        return "Admin/Details_SP";
+    }
+
+    @GetMapping("/mota-sp/{id}")
+    public String moTaSanPhamView(
+            @PathVariable("id") String id,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        SanPham sp = sanPhamRepository.findById(id).orElse(null);
+
+        if (sp == null) {
+            redirectAttributes.addFlashAttribute("Error", "Không tìm thấy sản phẩm!");
+            return "redirect:/admin/ql-sanpham";
+        }
+
+        model.addAttribute("sanPham", sp);
+        return "Admin/Details_SP";
+    }
+
+    @GetMapping("/delete-sp/{id}")
+    public String deleteSanPhamView(
+            @PathVariable("id") String id,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        SanPham sp = sanPhamRepository.findById(id).orElse(null);
+
+        if (sp == null) {
+            redirectAttributes.addFlashAttribute("Error", "Không tìm thấy sản phẩm!");
+            return "redirect:/admin/ql-sanpham";
+        }
+
+        model.addAttribute("sanPham", sp);
+        return "Admin/Delete_SP";
+    }
+
+    @PostMapping("/delete-sp")
+    public String deleteSanPhamPost(
+            @RequestParam("maSP") String maSP,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            sanPhamRepository.deleteById(maSP);
+            redirectAttributes.addFlashAttribute("Success", "Xóa sản phẩm thành công!");
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute(
+                    "Error",
+                    "Không thể xóa sản phẩm này vì đã liên kết với hóa đơn hoặc dữ liệu khác."
+            );
+        }
+
+        return "redirect:/admin/ql-sanpham";
+    }
+
+    private String layDuoiFile(String fileName) {
+        if (fileName == null || !fileName.contains(".")) {
+            return ".jpg";
+        }
+
+        String extension = fileName.substring(fileName.lastIndexOf(".")).toLowerCase();
+
+        if (
+                !extension.equals(".jpg")
+                        && !extension.equals(".jpeg")
+                        && !extension.equals(".png")
+                        && !extension.equals(".webp")
+        ) {
+            return ".jpg";
+        }
+
+        return extension;
+    }
+
+    private synchronized String generateMaDSA() {
+        DanhSachAnh last = danhSachAnhRepository.findTopByOrderByMaDsaDesc();
+
+        if (last == null || last.getMaDsa() == null) {
+            return "DSA001";
+        }
+
+        try {
+            int next = Integer.parseInt(last.getMaDsa().substring(3)) + 1;
+            return String.format("DSA%03d", next);
+        } catch (Exception e) {
+            return "DSA" + System.currentTimeMillis() % 1000000;
+        }
     }
 }

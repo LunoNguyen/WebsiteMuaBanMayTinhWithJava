@@ -63,7 +63,7 @@
       >
         <div class="card">
           <img
-            th:src="@{/Content/HinhAnhPhongVu/no-image.jpg}"
+            th:src="@{/Content/HinhAnhPhongVu/{file}(file=${item.danhSachAnhs[0].tenAnh})}"
             class="card-img-top border border-dark w-100"
             style="height: 150px"
             alt="Ảnh bìa"

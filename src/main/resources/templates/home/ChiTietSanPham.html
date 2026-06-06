@@ -25,10 +25,14 @@
         box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
       }
 
+      .product-gallery {
+        width: 100%;
+      }
+
       .main-img-box {
         width: 100%;
         height: 420px;
-        background-color: #ffffff;
+        background-color: #f8f9fa;
         border: 1px solid #e5e7eb;
         border-radius: 16px;
         padding: 18px;
@@ -43,6 +47,80 @@
         height: 100% !important;
         object-fit: contain !important;
         display: block;
+      }
+
+      .thumb-gallery-wrapper {
+        width: 100%;
+        margin-top: 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .thumb-list {
+        flex: 1;
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding: 4px 2px 8px 2px;
+        scroll-behavior: smooth;
+      }
+
+      .thumb-list::-webkit-scrollbar {
+        height: 6px;
+      }
+
+      .thumb-list::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+        border-radius: 999px;
+      }
+
+      .thumb-btn {
+        min-width: 82px;
+        width: 82px;
+        height: 74px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background-color: #ffffff;
+        padding: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .thumb-btn:hover {
+        border-color: #3456c4;
+        transform: translateY(-2px);
+      }
+
+      .thumb-btn.active {
+        border: 2px solid #0d6efd;
+        box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.12);
+      }
+
+      .thumb-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+
+      .thumb-nav {
+        width: 38px;
+        height: 38px;
+        border: none;
+        border-radius: 50%;
+        background-color: #ffffff;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+        color: #4b5563;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+      }
+
+      .thumb-nav:hover {
+        background-color: #3456c4;
+        color: #ffffff;
       }
 
       .product-title {
@@ -252,7 +330,13 @@
 
         .main-img-box {
           height: 300px;
-          margin-bottom: 20px;
+          margin-bottom: 10px;
+        }
+
+        .thumb-btn {
+          min-width: 70px;
+          width: 70px;
+          height: 64px;
         }
 
         .product-title {
@@ -285,21 +369,63 @@
       <div class="product-detail-card">
         <div class="row g-4 align-items-start">
           <div class="col-md-5">
-            <div class="main-img-box">
-              <img
-                th:if="${sp.danhSachAnhs != null and !sp.danhSachAnhs.isEmpty()}"
-                th:src="@{'/Content/HinhAnhPhongVu/' + ${sp.danhSachAnhs[0].tenAnh}}"
-                class="main-product-img"
-                alt="Ảnh sản phẩm"
-              />
+            <div class="product-gallery">
+              <div class="main-img-box">
+                <img
+                  id="mainProductImage"
+                  th:if="${sp.danhSachAnhs != null and !sp.danhSachAnhs.isEmpty()}"
+                  th:src="@{/Content/HinhAnhPhongVu/{file}(file=${sp.danhSachAnhs[0].tenAnh})}"
+                  class="main-product-img"
+                  alt="Ảnh sản phẩm"
+                />
 
-              <img
-                th:unless="${sp.danhSachAnhs != null and !sp.danhSachAnhs.isEmpty()}"
-                th:src="@{/Content/HinhAnhPhongVu/no-image.jpg}"
-                class="main-product-img"
-                style="opacity: 0.55"
-                alt="No Image"
-              />
+                <img
+                  id="mainProductImage"
+                  th:unless="${sp.danhSachAnhs != null and !sp.danhSachAnhs.isEmpty()}"
+                  th:src="@{/Content/HinhAnhPhongVu/no-image.jpg}"
+                  class="main-product-img"
+                  style="opacity: 0.55"
+                  alt="No Image"
+                />
+              </div>
+
+              <div
+                class="thumb-gallery-wrapper"
+                th:if="${sp.danhSachAnhs != null and !sp.danhSachAnhs.isEmpty()}"
+              >
+                <button
+                  type="button"
+                  class="thumb-nav"
+                  onclick="scrollProductThumbs(-1)"
+                >
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+
+                <div class="thumb-list" id="productThumbList">
+                  <button
+                    type="button"
+                    th:each="anh, stat : ${sp.danhSachAnhs}"
+                    class="thumb-btn"
+                    th:classappend="${stat.index == 0} ? ' active' : ''"
+                    th:data-img-url="@{/Content/HinhAnhPhongVu/{file}(file=${anh.tenAnh})}"
+                    onclick="changeMainProductImage(this)"
+                  >
+                    <img
+                      th:src="@{/Content/HinhAnhPhongVu/{file}(file=${anh.tenAnh})}"
+                      class="thumb-img"
+                      alt="Ảnh nhỏ sản phẩm"
+                    />
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  class="thumb-nav"
+                  onclick="scrollProductThumbs(1)"
+                >
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -363,42 +489,54 @@
                   <tbody>
                     <tr>
                       <td>CPU</td>
-                      <td th:text="${moTa.cpu != null ? moTa.cpu : 'Đang cập nhật'}">
+                      <td
+                        th:text="${moTa.cpu != null ? moTa.cpu : 'Đang cập nhật'}"
+                      >
                         Đang cập nhật
                       </td>
                     </tr>
 
                     <tr>
                       <td>RAM</td>
-                      <td th:text="${moTa.ram != null ? moTa.ram : 'Đang cập nhật'}">
+                      <td
+                        th:text="${moTa.ram != null ? moTa.ram : 'Đang cập nhật'}"
+                      >
                         Đang cập nhật
                       </td>
                     </tr>
 
                     <tr>
                       <td>Ổ cứng</td>
-                      <td th:text="${moTa.rom != null ? moTa.rom : 'Đang cập nhật'}">
+                      <td
+                        th:text="${moTa.rom != null ? moTa.rom : 'Đang cập nhật'}"
+                      >
                         Đang cập nhật
                       </td>
                     </tr>
 
                     <tr>
                       <td>Màn hình</td>
-                      <td th:text="${moTa.manHinh != null ? moTa.manHinh : 'Đang cập nhật'}">
+                      <td
+                        th:text="${moTa.manHinh != null ? moTa.manHinh : 'Đang cập nhật'}"
+                      >
                         Đang cập nhật
                       </td>
                     </tr>
 
                     <tr>
                       <td>VGA</td>
-                      <td th:text="${moTa.vga != null ? moTa.vga : 'Đang cập nhật'}">
+                      <td
+                        th:text="${moTa.vga != null ? moTa.vga : 'Đang cập nhật'}"
+                      >
                         Đang cập nhật
                       </td>
                     </tr>
 
                     <tr>
                       <td>Khác</td>
-                      <td th:text="${moTa.khac != null ? moTa.khac : 'Đang cập nhật'}">
+                      <td
+                        th:text="${moTa.khac != null ? moTa.khac : 'Đang cập nhật'}"
+                      >
                         Đang cập nhật
                       </td>
                     </tr>
@@ -406,7 +544,10 @@
                 </table>
               </div>
 
-              <div th:if="${moTa == null}" class="alert alert-warning empty-alert mt-3">
+              <div
+                th:if="${moTa == null}"
+                class="alert alert-warning empty-alert mt-3"
+              >
                 Sản phẩm này hiện chưa có thông số kỹ thuật chi tiết.
               </div>
             </div>
@@ -419,7 +560,10 @@
                 Thêm vào giỏ hàng
               </a>
 
-              <a th:href="@{/trang-chu}" class="btn btn-outline-secondary back-btn">
+              <a
+                th:href="@{/trang-chu}"
+                class="btn btn-outline-secondary back-btn"
+              >
                 Quay lại trang chủ
               </a>
             </div>
@@ -447,7 +591,7 @@
             <div class="related-img-box">
               <img
                 th:if="${item.danhSachAnhs != null and !item.danhSachAnhs.isEmpty()}"
-                th:src="@{'/Content/HinhAnhPhongVu/' + ${item.danhSachAnhs[0].tenAnh}}"
+                th:src="@{/Content/HinhAnhPhongVu/{file}(file=${item.danhSachAnhs[0].tenAnh})}"
                 class="related-img"
                 alt="Ảnh sản phẩm"
               />
@@ -490,5 +634,33 @@
         </div>
       </div>
     </div>
+
+    <script>
+      function changeMainProductImage(button) {
+        const mainImage = document.getElementById("mainProductImage");
+        const imageUrl = button.getAttribute("data-img-url");
+
+        if (mainImage && imageUrl) {
+          mainImage.src = imageUrl;
+        }
+
+        document.querySelectorAll(".thumb-btn").forEach(function (btn) {
+          btn.classList.remove("active");
+        });
+
+        button.classList.add("active");
+      }
+
+      function scrollProductThumbs(direction) {
+        const thumbList = document.getElementById("productThumbList");
+
+        if (thumbList) {
+          thumbList.scrollBy({
+            left: direction * 120,
+            behavior: "smooth",
+          });
+        }
+      }
+    </script>
   </body>
 </html>

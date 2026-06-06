@@ -210,19 +210,11 @@ public class GioHangController {
         }
 
         try {
-            String maHienTai = lastHD.getMaHD();
-            
-            // Xóa toàn bộ chữ, chỉ lấy phần số 
-            // (Đề phòng có ai táy máy sửa data thêm chữ cái vào giữa)
-            String phanSo = maHienTai.replaceAll("[^0-9]", ""); 
-            
-            if (phanSo.isEmpty()) {
-                return "HD" + System.currentTimeMillis();
+            int nextSo = Integer.parseInt(lastHD.getMaHD().substring(2)) + 1;
+            System.out.println("Generated MaHD: " + String.format("HD%05d", nextSo));
+            while (hoaDonRepository.existsById(String.format("HD%05d", nextSo))) {
+                nextSo++;
             }
-
-            // Dùng Long thay vì Integer để tuyệt đối không bao giờ bị tràn số
-            long nextSo = Long.parseLong(phanSo) + 1;
-            
             return String.format("HD%05d", nextSo);
             
         } catch (Exception e) {

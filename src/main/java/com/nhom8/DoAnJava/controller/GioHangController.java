@@ -200,6 +200,10 @@ public class GioHangController {
         if (lastHD == null) return "HD00001";
         try {
             int nextSo = Integer.parseInt(lastHD.getMaHD().substring(2)) + 1;
+            System.out.println("Generated MaHD: " + String.format("HD%05d", nextSo));
+            while (hoaDonRepository.existsById(String.format("HD%05d", nextSo))) {
+                nextSo++;
+            }
             return String.format("HD%05d", nextSo);
         } catch (Exception e) {
             return "HD" + System.currentTimeMillis();

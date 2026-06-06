@@ -61,7 +61,12 @@ public class GioHangController {
         ItemGioHangDTO item = lstGioHang.stream().filter(n -> n.getiMaSP().equals(iMaSP)).findFirst().orElse(null);
 
         if (item == null) {
-            item = new ItemGioHangDTO(sp.getMaSP(), sp.getTenSP(), "no-image.jpg", sp.getDonGiaSP().doubleValue());
+            // [BẪY LỖI AN TOÀN]: Kiểm tra xem sản phẩm có ảnh hay không trước khi lấy
+            String hinhAnh = (sp.getDanhSachAnhs() != null && !sp.getDanhSachAnhs().isEmpty()) 
+                             ? sp.getDanhSachAnhs().get(0).getTenAnh() 
+                             : "no-image.jpg"; // Nếu không có thì dùng ảnh mặc định
+            
+            item = new ItemGioHangDTO(sp.getMaSP(), sp.getTenSP(), hinhAnh, sp.getDonGiaSP().doubleValue());
             lstGioHang.add(item);
         } else {
             if (item.getiSoLuong() < 10) item.setiSoLuong(item.getiSoLuong() + 1);
@@ -173,8 +178,8 @@ public class GioHangController {
 
                 SanPham sp = sanPhamRepository.findById(item.getiMaSP()).orElse(null);
                 if (sp != null) {
-                    if (sp.getSoLuongTon() < item.getiSoLuong()) throw new RuntimeException("Sản phẩm không đủ tồn kho.");
-                    sp.setSoLuongTon(sp.getSoLuongTon() - item.getiSoLuong());
+                    if (sp.getSoLuongTon() < item.getiSoLuong()) 
+    throw new RuntimeException("Xin lỗi, sản phẩm '" + sp.getTenSP() + "' hiện chỉ còn " + sp.getSoLuongTon() + " chiếc trong kho.");
                     sanPhamRepository.save(sp);
                 }
             }
@@ -185,6 +190,7 @@ public class GioHangController {
 
             return "redirect:/gio-hang/dat-hang-thanh-cong";
         } catch (Exception ex) {
+            ex.printStackTrace();
             redirectAttributes.addFlashAttribute("Error", "Lỗi đặt hàng: " + ex.getMessage());
             return "redirect:/gio-hang/";
         }
@@ -195,14 +201,33 @@ public class GioHangController {
         return "giohang/DatHangThanhCong";
     }
 
-    private String generateMaHD() {
+    private synchronized String generateMaHD() {
+        // Lấy hóa đơn cuối cùng ra
         HoaDon lastHD = hoaDonRepository.findFirstByOrderByMaHDDesc();
-        if (lastHD == null) return "HD00001";
+        
+        if (lastHD == null || lastHD.getMaHD() == null) {
+            return "HD00001";
+        }
+
         try {
-            int nextSo = Integer.parseInt(lastHD.getMaHD().substring(2)) + 1;
+            String maHienTai = lastHD.getMaHD();
+            
+            // Xóa toàn bộ chữ, chỉ lấy phần số 
+            // (Đề phòng có ai táy máy sửa data thêm chữ cái vào giữa)
+            String phanSo = maHienTai.replaceAll("[^0-9]", ""); 
+            
+            if (phanSo.isEmpty()) {
+                return "HD" + System.currentTimeMillis();
+            }
+
+            // Dùng Long thay vì Integer để tuyệt đối không bao giờ bị tràn số
+            long nextSo = Long.parseLong(phanSo) + 1;
+            
             return String.format("HD%05d", nextSo);
+            
         } catch (Exception e) {
-            return "HD" + System.currentTimeMillis();
+            // Nếu có lỗi dị thường, sinh mã UUID 8 ký tự để không bao giờ chết vòng lặp
+            return "HD_ERR_" + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         }
     }
 }

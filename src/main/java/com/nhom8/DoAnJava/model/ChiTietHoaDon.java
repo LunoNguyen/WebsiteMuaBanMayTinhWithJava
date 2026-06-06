@@ -1,7 +1,14 @@
 package com.nhom8.DoAnJava.model;
 
-import jakarta.persistence.*;
 import java.math.BigDecimal;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "CHITIETHOADON")
@@ -65,5 +72,12 @@ public class ChiTietHoaDon {
         this.hoaDon = hoaDon;
     }
 
+    // Biến sanPham CHỈ DÙNG ĐỂ ĐỌC DỮ LIỆU (Xem tên, xem giá, xem ảnh)
+    @ManyToOne
+    @JoinColumn(name = "MASP", insertable = false, updatable = false)
+    private SanPham sanPham;
     
+    public SanPham getSanPham() {
+        return sanPham;
+    }
 }

@@ -1,14 +1,14 @@
 <!doctype html>
 <html
   xmlns:th="http://www.thymeleaf.org"
-  th:replace="~{shared/_LayoutAdmin :: layout(~{::div.container-fluid})}"
+  th:replace="~{shared/_LayoutTrangChu :: layout(~{::div.container-fluid})}"
 >
   <body>
     <div class="container-fluid px-4">
       <div class="d-flex justify-content-between align-items-center mt-4 mb-4">
         <h1>Quản Lý Đơn Hàng</h1>
         <div>
-          <a th:href="@{/admin/ql-donhang}" class="btn btn-secondary me-2"
+          <a th:href="@{/home/trang-chu}" class="btn btn-secondary me-2"
             >Quay lại</a
           >
           <button onclick="InHoaDonChuyenNghiep()" class="btn btn-primary">
@@ -63,7 +63,7 @@
                 <td class="text-center" th:text="${stat.count}"></td>
                 <td th:text="${item.sanPham.tenSP}"></td>
                 <td class="text-center" th:text="${item.sanPham.donVT}"></td>
-                <td class="text-center" th:text="${item.soLuongSPHD}"></td>
+                <td class="text-center" th:text="${item.soLuongSP_HD}"></td>
                 <td
                   class="text-end"
                   th:text="${#numbers.formatDecimal(item.sanPham.donGiaSP, 0, 'COMMA', 0, 'POINT')} + ' đ'"

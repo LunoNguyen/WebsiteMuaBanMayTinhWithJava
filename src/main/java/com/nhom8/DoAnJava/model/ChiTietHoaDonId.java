@@ -47,4 +47,5 @@ public class ChiTietHoaDonId implements Serializable {
     public int hashCode() {
         return Objects.hash(maSP, maHD);
     }
+
 }

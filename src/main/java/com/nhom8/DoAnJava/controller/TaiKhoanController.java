@@ -215,17 +215,23 @@ public class TaiKhoanController {
     // ==================== 5. LỊCH SỬ MUA HÀNG ====================
     @GetMapping("/lich-su-don-hang")
     public String lichSuDonHang(HttpSession session, Model model) {
+        // 1. Kiểm tra đăng nhập
         String maTK = (String) session.getAttribute("UserID");
-        if (maTK == null) return "redirect:/tai-khoan/dang-nhap";
-
-        TaiKhoan user = taiKhoanRepository.findById(maTK).orElse(null);
-        if (user == null || user.getMaKH() == null) {
-            model.addAttribute("listDonHang", new ArrayList<HoaDon>());
-            return "taikhoan/LichSuDonHang";
+        if (maTK == null) {
+            return "redirect:/tai-khoan/dang-nhap";
         }
 
-        List<HoaDon> listDonHang = hoaDonRepository.findByKhachHang_MaKHOrderByNgayLapDesc(user.getMaKH());
-        model.addAttribute("listDonHang", listDonHang);
+        // 2. Lấy thông tin tài khoản và khách hàng
+        TaiKhoan user = taiKhoanRepository.findById(maTK).orElse(null);
+        
+        if (user != null && user.getMaKH() != null) {
+            // 3. GỌI HÀM LẤY DANH SÁCH (LIST) Ở BƯỚC 1
+            List<HoaDon> listDonHang = hoaDonRepository.findByKhachHang_MaKHOrderByNgayLapDesc(user.getMaKH());
+            
+            // 4. Đẩy danh sách ra View (Tên biến phải khớp với ${listDonHang} trong HTML)
+            model.addAttribute("listDonHang", listDonHang);
+        }
+
         return "taikhoan/LichSuDonHang";
     }
 

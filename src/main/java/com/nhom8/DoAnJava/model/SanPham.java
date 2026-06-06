@@ -46,6 +46,9 @@ public class SanPham {
     @Column(name = "DONGIA_SP")
     private BigDecimal donGiaSP;
 
+    @OneToMany(mappedBy = "sanPham")
+    private List<DanhSachAnh> danhSachAnhs;
+
 
     // Getters and Setters
     public String getMaSP() { return maSP; }
@@ -78,6 +81,10 @@ public class SanPham {
     public BigDecimal getDonGiaSP() { return donGiaSP; }
     public void setDonGiaSP(BigDecimal donGiaSP) { this.donGiaSP = donGiaSP; }
 
+    public List<DanhSachAnh> getDanhSachAnhs() {
+        return danhSachAnhs;
+    }
+    
     // Thêm danh sách mô tả vào SanPham
     @OneToMany(mappedBy = "sanPham")
     private List<MoTa> moTas;
@@ -88,6 +95,10 @@ public class SanPham {
 
     public void setMoTas(List<MoTa> moTas) {
         this.moTas = moTas;
+    }
+
+    public void setDanhSachAnhs(List<DanhSachAnh> danhSachAnhs) {
+        this.danhSachAnhs = danhSachAnhs;
     }
 
     @ManyToOne

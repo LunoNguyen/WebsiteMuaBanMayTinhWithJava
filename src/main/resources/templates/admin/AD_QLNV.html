@@ -39,7 +39,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr th:each="item : ${QLNV}">
+                <tr th:each="item : ${QLNV}" th:if="${!QLNV.isEmpty()}">
                   <td class="text-center" th:text="${item.maNV}"></td>
                   <td class="text-center" th:text="${item.maCV}"></td>
                   <td class="fw-bold" th:text="${item.tenNV}"></td>
@@ -47,18 +47,32 @@
                   <td th:text="${item.sdtNV}"></td>
                   <td th:text="${item.diaChiNV}"></td>
                   <td class="text-center">
-                    <div class="btn-group" role="group">
+                    <div class="d-flex justify-content-center gap-1">
                       <a
-                        th:href="@{/admin/edit-nv/{id}(id=${item.maNV})}"
-                        class="btn btn-warning btn-sm"
+                        th:href="@{'/admin/edit-nv/' + ${item.maNV}}"
+                        class="btn btn-warning btn-sm text-dark fw-semibold"
                         >Sửa</a
                       >
-                      <a
-                        th:href="@{/admin/delete-nv/{id}(id=${item.maNV})}"
-                        class="btn btn-danger btn-sm ms-1"
-                        >Xóa</a
+                      <form
+                        th:action="@{'/admin/xoa-nhanvien/' + ${item.maNV}}"
+                        method="post"
+                        onsubmit="return confirm('Bạn có chắc chắn muốn xóa?');"
                       >
+                        <button
+                          type="submit"
+                          class="btn btn-danger btn-sm fw-semibold"
+                        >
+                          Xóa
+                        </button>
+                      </form>
                     </div>
+                  </td>
+                </tr>
+
+                <tr th:if="${QLNV == null or QLNV.isEmpty()}">
+                  <td colspan="7" class="text-center text-muted py-5">
+                    <h5 class="fw-bold mt-2">Chưa có dữ liệu</h5>
+                    <p>Hiện chưa có nhân viên nào trong hệ thống.</p>
                   </td>
                 </tr>
               </tbody>

@@ -20,6 +20,7 @@ import com.nhom8.DoAnJava.model.MoTa;
 import com.nhom8.DoAnJava.model.NhanVien;
 import com.nhom8.DoAnJava.model.SanPham;
 import com.nhom8.DoAnJava.model.TaiKhoan;
+import com.nhom8.DoAnJava.repository.ChucVuRepository;
 import com.nhom8.DoAnJava.repository.HoaDonRepository;
 import com.nhom8.DoAnJava.repository.KhachHangRepository;
 import com.nhom8.DoAnJava.repository.LoaiSanPhamRepository;
@@ -43,6 +44,7 @@ public class AdminController {
     @Autowired private LoaiSanPhamRepository loaiSanPhamRepository;
     @Autowired private NhaSanXuatRepository nhaSanXuatRepository;
     @Autowired private NhaCungCapRepository nhaCungCapRepository;
+    @Autowired private ChucVuRepository chucVuRepository;
 
     // 1. TRANG DASHBOARD ADMIN MAIN
     @GetMapping("/trang-admin")
@@ -248,13 +250,16 @@ public class AdminController {
     @GetMapping("/create-nv")
     public String createNhanVienView(Model model) {
         model.addAttribute("nhanVien", new NhanVien());
-        return "Admin/Create_NV"; 
+        
+        // Đẩy danh sách chức vụ ra giao diện
+        model.addAttribute("dsChucVu", chucVuRepository.findAll()); 
+        
+        return "admin/Create_NV"; 
     }
-
     @PostMapping("/create-nv")
     public String createNhanVienPost(@ModelAttribute NhanVien nhanVien, RedirectAttributes redirectAttributes) {
         try {
-            // Lưu dữ liệu trực tiếp vào database sẵn có
+            // Lưu nhân viên mới vào Database
             nhanVienRepository.save(nhanVien);
             redirectAttributes.addFlashAttribute("Success", "Thêm nhân viên thành công!");
         } catch (Exception e) {
@@ -266,9 +271,9 @@ public class AdminController {
     // ==========================================
     // CHỈNH SỬA THÔNG TIN NHÂN VIÊN
     // ==========================================
+    
     @GetMapping("/edit-nv/{id}")
     public String editNhanVienView(@PathVariable("id") String id, Model model, RedirectAttributes redirectAttributes) {
-        // Truy xuất dữ liệu nhân viên từ database sẵn có
         NhanVien nv = nhanVienRepository.findById(id).orElse(null);
         if (nv == null) {
             redirectAttributes.addFlashAttribute("Error", "Không tìm thấy nhân viên!");
@@ -276,31 +281,34 @@ public class AdminController {
         }
         
         model.addAttribute("nhanVien", nv);
-        return "Admin/Edit_NV";
+        
+        // Đẩy danh sách chức vụ ra giao diện
+        model.addAttribute("dsChucVu", chucVuRepository.findAll());
+        
+        return "admin/Edit_NV";
     }
-
     @PostMapping("/edit-nv")
     public String editNhanVienPost(@ModelAttribute NhanVien nvMoi, RedirectAttributes redirectAttributes) {
         try {
             NhanVien nvCu = nhanVienRepository.findById(nvMoi.getMaNV()).orElse(null);
             if(nvCu != null) {
-                // Cập nhật các trường thông tin từ Form gửi lên
+                // Lấy dữ liệu từ form và cập nhật vào database sẵn có
                 nvCu.setTenNV(nvMoi.getTenNV());
                 nvCu.setSdtNV(nvMoi.getSdtNV());
                 nvCu.setDiaChiNV(nvMoi.getDiaChiNV());
                 nvCu.setEmailNV(nvMoi.getEmailNV());
-                // (Bạn có thể bổ sung thêm nvCu.setChucVu(...) nếu bảng NhanVien có trường này)
+                nvCu.setMaCV(nvMoi.getMaCV()); 
                 
-                // Lưu lại thông tin cập nhật xuống DB
                 nhanVienRepository.save(nvCu);
                 redirectAttributes.addFlashAttribute("Success", "Cập nhật nhân viên thành công!");
+            } else {
+                redirectAttributes.addFlashAttribute("Error", "Lỗi: Không tìm thấy nhân viên trong Database!");
             }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("Error", "Lỗi cập nhật: " + e.getMessage());
         }
         return "redirect:/admin/ql-nhanvien";
     }
-
     // ==========================================
     // XÓA NHÂN VIÊN (BẮT LỖI KHÓA NGOẠI)
     // ==========================================

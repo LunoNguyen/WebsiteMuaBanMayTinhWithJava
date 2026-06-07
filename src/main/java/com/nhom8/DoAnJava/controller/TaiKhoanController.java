@@ -110,7 +110,7 @@ public class TaiKhoanController {
     @GetMapping("/dang-ky")
     public String dangKy(Model model) {
         model.addAttribute("dangKyDTO", new DangKyDTO());
-        return "DangKy";
+        return "taikhoan/DangKy";
     }
 
     @PostMapping("/xu-ly-dang-ky")

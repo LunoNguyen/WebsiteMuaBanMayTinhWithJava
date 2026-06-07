@@ -1,0 +1,101 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutAdmin :: layout(~{::div.container-fluid})}"
+>
+  <body>
+    <div class="container-fluid px-4">
+      <h1 class="mt-4">Thêm Khách Hàng Mới</h1>
+      <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item">
+          <a th:href="@{/admin/trang-admin}">Tổng quan</a>
+        </li>
+        <li class="breadcrumb-item">
+          <a th:href="@{/admin/ql-khachhang}">Danh sách Khách hàng</a>
+        </li>
+        <li class="breadcrumb-item active">Thêm mới</li>
+      </ol>
+
+      <div class="card mb-4 shadow-sm" style="max-width: 800px; margin: auto">
+        <div class="card-header bg-primary text-white fw-bold">
+          <i class="fas fa-user-plus me-1"></i> Nhập thông tin khách hàng
+        </div>
+        <div class="card-body">
+          <form
+            th:action="@{/admin/create-kh}"
+            method="post"
+            th:object="${khachHang}"
+          >
+            <div class="mb-3">
+              <label class="form-label fw-semibold"
+                >Mã Khách Hàng (Tùy chọn/Tự sinh)</label
+              >
+              <input
+                type="text"
+                class="form-control"
+                th:field="*{maKH}"
+                placeholder="Nhập mã (hoặc để trống nếu DB tự tăng)"
+              />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold"
+                >Tên Khách Hàng <span class="text-danger">*</span></label
+              >
+              <input
+                type="text"
+                class="form-control"
+                th:field="*{tenKH}"
+                required
+                placeholder="VD: Nguyễn Văn A"
+              />
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">Email</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  th:field="*{emailKH}"
+                  placeholder="VD: email@example.com"
+                />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold"
+                  >Số điện thoại <span class="text-danger">*</span></label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  th:field="*{sdtKH}"
+                  required
+                  placeholder="VD: 0987654321"
+                />
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Địa chỉ</label>
+              <textarea
+                class="form-control"
+                th:field="*{diaChiKH}"
+                rows="3"
+                placeholder="Nhập địa chỉ chi tiết..."
+              ></textarea>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+              <a th:href="@{/admin/ql-khachhang}" class="btn btn-secondary"
+                >Hủy bỏ</a
+              >
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-1"></i> Lưu khách hàng
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

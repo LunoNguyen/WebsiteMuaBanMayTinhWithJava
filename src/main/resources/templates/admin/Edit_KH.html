@@ -1,0 +1,97 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutAdmin :: layout(~{::div.container-fluid})}"
+>
+  <body>
+    <div class="container-fluid px-4">
+      <h1 class="mt-4">Chỉnh Sửa Khách Hàng</h1>
+      <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item">
+          <a th:href="@{/admin/trang-admin}">Tổng quan</a>
+        </li>
+        <li class="breadcrumb-item">
+          <a th:href="@{/admin/ql-khachhang}">Danh sách Khách hàng</a>
+        </li>
+        <li class="breadcrumb-item active">Chỉnh sửa</li>
+      </ol>
+
+      <div class="card mb-4 shadow-sm" style="max-width: 800px; margin: auto">
+        <div class="card-header bg-warning text-dark fw-bold">
+          <i class="fas fa-user-edit me-1"></i> Cập nhật thông tin
+        </div>
+        <div class="card-body">
+          <form
+            th:action="@{/admin/edit-kh}"
+            method="post"
+            th:object="${khachHang}"
+          >
+            <div class="mb-3">
+              <label class="form-label fw-semibold"
+                >Mã Khách Hàng (Không được sửa)</label
+              >
+              <input
+                type="text"
+                class="form-control bg-light"
+                th:field="*{maKH}"
+                readonly
+              />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold"
+                >Tên Khách Hàng <span class="text-danger">*</span></label
+              >
+              <input
+                type="text"
+                class="form-control"
+                th:field="*{tenKH}"
+                required
+              />
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">Email</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  th:field="*{emailKH}"
+                />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold"
+                  >Số điện thoại <span class="text-danger">*</span></label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  th:field="*{sdtKH}"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Địa chỉ</label>
+              <textarea
+                class="form-control"
+                th:field="*{diaChiKH}"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+              <a th:href="@{/admin/ql-khachhang}" class="btn btn-secondary"
+                >Hủy bỏ</a
+              >
+              <button type="submit" class="btn btn-warning fw-bold">
+                <i class="fas fa-check me-1"></i> Cập nhật thay đổi
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

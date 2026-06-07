@@ -105,16 +105,21 @@
       }
 
       .thumb-nav {
+        min-width: 38px;
         width: 38px;
         height: 38px;
         border: none;
         border-radius: 50%;
         background-color: #ffffff;
         box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
-        color: #4b5563;
+        color: #111827;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 1;
         display: flex;
         align-items: center;
         justify-content: center;
+        cursor: pointer;
         transition: all 0.2s ease;
       }
 
@@ -339,6 +344,13 @@
           height: 64px;
         }
 
+        .thumb-nav {
+          min-width: 34px;
+          width: 34px;
+          height: 34px;
+          font-size: 22px;
+        }
+
         .product-title {
           font-size: 24px;
         }
@@ -396,9 +408,10 @@
                 <button
                   type="button"
                   class="thumb-nav"
-                  onclick="scrollProductThumbs(-1)"
+                  onclick="moveProductImage(-1)"
+                  aria-label="Ảnh trước"
                 >
-                  <i class="fas fa-chevron-left"></i>
+                  &#10094;
                 </button>
 
                 <div class="thumb-list" id="productThumbList">
@@ -421,9 +434,10 @@
                 <button
                   type="button"
                   class="thumb-nav"
-                  onclick="scrollProductThumbs(1)"
+                  onclick="moveProductImage(1)"
+                  aria-label="Ảnh tiếp theo"
                 >
-                  <i class="fas fa-chevron-right"></i>
+                  &#10095;
                 </button>
               </div>
             </div>
@@ -649,17 +663,40 @@
         });
 
         button.classList.add("active");
+
+        button.scrollIntoView({
+          behavior: "smooth",
+          inline: "center",
+          block: "nearest",
+        });
       }
 
-      function scrollProductThumbs(direction) {
-        const thumbList = document.getElementById("productThumbList");
+      function moveProductImage(direction) {
+        const buttons = Array.from(document.querySelectorAll(".thumb-btn"));
 
-        if (thumbList) {
-          thumbList.scrollBy({
-            left: direction * 120,
-            behavior: "smooth",
-          });
+        if (buttons.length === 0) {
+          return;
         }
+
+        let currentIndex = buttons.findIndex(function (btn) {
+          return btn.classList.contains("active");
+        });
+
+        if (currentIndex === -1) {
+          currentIndex = 0;
+        }
+
+        let nextIndex = currentIndex + direction;
+
+        if (nextIndex < 0) {
+          nextIndex = buttons.length - 1;
+        }
+
+        if (nextIndex >= buttons.length) {
+          nextIndex = 0;
+        }
+
+        changeMainProductImage(buttons[nextIndex]);
       }
     </script>
   </body>

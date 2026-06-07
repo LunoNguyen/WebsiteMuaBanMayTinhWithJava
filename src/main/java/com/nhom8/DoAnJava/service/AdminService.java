@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +80,20 @@ public class AdminService {
             return h2.getNgayLap().compareTo(h1.getNgayLap());
         });
         stats.put("DonHangMoi", hoaDons.stream().limit(5).toList());
+
+        List<String> nhanDoanhThuTheoThang = new ArrayList<>();
+        List<Long> doanhThuTheoThang = new ArrayList<>();
+        for (int i = 1; i <= 12; i++) {
+            BigDecimal doanhThuThang = hoaDonRepository.findByThangAndNam(i, nam).stream()
+                    .map(HoaDon::getTongTienHD)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            nhanDoanhThuTheoThang.add("Thang " + i);
+            doanhThuTheoThang.add(doanhThuThang.longValue());
+        }
+        stats.put("NhanDoanhThuTheoThang", nhanDoanhThuTheoThang);
+        stats.put("DoanhThuTheoThang", doanhThuTheoThang);
 
         return stats;
     }

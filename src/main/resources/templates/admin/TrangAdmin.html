@@ -88,6 +88,20 @@
       </div>
 
       <div class="row">
+        <div class="col-xl-12">
+          <div class="card mb-4 shadow-sm">
+            <div class="card-header fw-bold">
+              <i class="fas fa-chart-line me-1"></i>
+              Bieu do doanh thu nam <span th:text="${Nam}"></span>
+            </div>
+            <div class="card-body">
+              <canvas id="revenueYearChart" height="320"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
         <div class="col-xl-6">
           <div class="card mb-4">
             <div class="card-header">
@@ -137,6 +151,115 @@
           </div>
         </div>
       </div>
+      <script th:inline="javascript">
+        (() => {
+          const labels = /*[[${NhanDoanhThuTheoThang}]]*/ [];
+          const values = /*[[${DoanhThuTheoThang}]]*/ [];
+          const canvas = document.getElementById("revenueYearChart");
+
+          const formatMoney = (value) =>
+            new Intl.NumberFormat("vi-VN").format(value || 0) + " d";
+
+          const fitCanvas = () => {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = Math.max(640, Math.floor(rect.width));
+            canvas.height = Number(canvas.getAttribute("height")) || 320;
+          };
+
+          const drawNoData = (ctx) => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#6c757d";
+            ctx.font = "14px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("Khong co du lieu doanh thu de hien thi", canvas.width / 2, canvas.height / 2);
+          };
+
+          const renderChart = () => {
+            fitCanvas();
+            const ctx = canvas.getContext("2d");
+            const max = Math.max(...values, 0);
+            if (!values.length || max <= 0) {
+              drawNoData(ctx);
+              return;
+            }
+
+            const padding = { top: 24, right: 24, bottom: 48, left: 90 };
+            const chartWidth = canvas.width - padding.left - padding.right;
+            const chartHeight = canvas.height - padding.top - padding.bottom;
+            const stepX = chartWidth / Math.max(values.length - 1, 1);
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = "12px Arial";
+
+            ctx.strokeStyle = "#dee2e6";
+            ctx.lineWidth = 1;
+            ctx.fillStyle = "#6c757d";
+            ctx.textAlign = "right";
+
+            for (let i = 0; i <= 4; i++) {
+              const ratio = i / 4;
+              const y = padding.top + chartHeight - chartHeight * ratio;
+              const value = max * ratio;
+
+              ctx.beginPath();
+              ctx.moveTo(padding.left, y);
+              ctx.lineTo(canvas.width - padding.right, y);
+              ctx.stroke();
+              ctx.fillText(formatMoney(value), padding.left - 8, y + 4);
+            }
+
+            const points = values.map((value, index) => {
+              const x = padding.left + stepX * index;
+              const y = padding.top + chartHeight - (value / max) * chartHeight;
+              return { x, y, value };
+            });
+
+            ctx.strokeStyle = "#0d6efd";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            points.forEach((point, index) => {
+              if (index === 0) {
+                ctx.moveTo(point.x, point.y);
+              } else {
+                ctx.lineTo(point.x, point.y);
+              }
+            });
+            ctx.stroke();
+
+            ctx.fillStyle = "rgba(13, 110, 253, 0.12)";
+            ctx.beginPath();
+            points.forEach((point, index) => {
+              if (index === 0) {
+                ctx.moveTo(point.x, point.y);
+              } else {
+                ctx.lineTo(point.x, point.y);
+              }
+            });
+            ctx.lineTo(points[points.length - 1].x, padding.top + chartHeight);
+            ctx.lineTo(points[0].x, padding.top + chartHeight);
+            ctx.closePath();
+            ctx.fill();
+
+            points.forEach((point, index) => {
+              ctx.fillStyle = "#0d6efd";
+              ctx.beginPath();
+              ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+              ctx.fill();
+
+              ctx.fillStyle = "#212529";
+              ctx.textAlign = "center";
+              ctx.fillText(labels[index] || "", point.x, canvas.height - 18);
+
+              if (point.value > 0) {
+                ctx.fillText(formatMoney(point.value), point.x, point.y - 10);
+              }
+            });
+          };
+
+          window.addEventListener("resize", renderChart);
+          renderChart();
+        })();
+      </script>
     </div>
   </body>
 </html>

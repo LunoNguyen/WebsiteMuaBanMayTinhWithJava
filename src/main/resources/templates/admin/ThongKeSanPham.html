@@ -7,10 +7,10 @@
     <div class="container-fluid px-4">
       <div class="d-flex justify-content-between align-items-center mt-4 mb-4">
         <div>
-          <h1 class="mb-0">Sản Phẩm Đã Bán</h1>
+          <h1 class="mb-0">San pham da ban</h1>
           <div
             class="text-muted"
-            th:text="'Tháng ' + ${Thang} + ' / ' + ${Nam}"
+            th:text="'Thang ' + ${Thang} + ' / ' + ${Nam}"
           ></div>
         </div>
 
@@ -20,9 +20,9 @@
           method="get"
         >
           <div class="input-group">
-            <span class="input-group-text bg-white border-0"
-              ><i class="fas fa-filter"></i
-            ></span>
+            <span class="input-group-text bg-white border-0">
+              <i class="fas fa-filter"></i>
+            </span>
             <select
               name="thang"
               class="form-select border-0 fw-bold"
@@ -31,7 +31,7 @@
               <option
                 th:each="i : ${#numbers.sequence(1, 12)}"
                 th:value="${i}"
-                th:text="'Tháng ' + ${i}"
+                th:text="'Thang ' + ${i}"
                 th:selected="${Thang == i}"
               ></option>
             </select>
@@ -43,7 +43,7 @@
               <option
                 th:each="i : ${#numbers.sequence(2020, 2030)}"
                 th:value="${i}"
-                th:text="'Năm ' + ${i}"
+                th:text="'Nam ' + ${i}"
                 th:selected="${Nam == i}"
               ></option>
             </select>
@@ -55,19 +55,68 @@
       </div>
 
       <div class="row mb-4">
-        <div class="col-xl-3 col-md-6">
+        <div class="col-xl-3 col-md-6 mb-3">
           <div class="card bg-warning text-white h-100">
             <div class="card-body">
               <div class="d-flex justify-content-between align-items-center">
                 <div class="me-3">
-                  <div class="text-white-75 small">Tổng lượng bán ra</div>
-                  <div
-                    class="display-6 fw-bold"
-                    th:text="${TongSoLuongDaBan}"
-                  ></div>
+                  <div class="text-white-75 small">Tong luong ban ra</div>
+                  <div class="display-6 fw-bold" th:text="${TongSoLuongDaBan}"></div>
                 </div>
                 <i class="fas fa-box-open fa-3x opacity-50"></i>
               </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+          <div class="card bg-success text-white h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="me-3">
+                  <div class="text-white-75 small">Doanh thu san pham</div>
+                  <div
+                    class="h3 fw-bold"
+                    th:text="${#numbers.formatDecimal(TongDoanhThuSanPham, 0, 'COMMA', 0, 'POINT')} + ' d'"
+                  ></div>
+                </div>
+                <i class="fas fa-chart-line fa-3x opacity-50"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-3">
+          <div class="card bg-primary text-white h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="me-3">
+                  <div class="text-white-75 small">San pham co ban</div>
+                  <div class="display-6 fw-bold" th:text="${#lists.size(DanhSachSP)}"></div>
+                </div>
+                <i class="fas fa-tags fa-3x opacity-50"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row mb-4">
+        <div class="col-xl-6 mb-3">
+          <div class="card shadow-sm h-100">
+            <div class="card-header fw-bold">
+              <i class="fas fa-chart-column me-1"></i> Top doanh thu theo san pham
+            </div>
+            <div class="card-body">
+              <canvas id="revenueChart" height="260"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="col-xl-6 mb-3">
+          <div class="card shadow-sm h-100">
+            <div class="card-header fw-bold">
+              <i class="fas fa-chart-bar me-1"></i> So luong ban va ton kho
+            </div>
+            <div class="card-body">
+              <canvas id="quantityChart" height="260"></canvas>
             </div>
           </div>
         </div>
@@ -75,7 +124,7 @@
 
       <div class="card mb-4 shadow-sm">
         <div class="card-header">
-          <i class="fas fa-list me-1"></i> Chi tiết từng sản phẩm
+          <i class="fas fa-list me-1"></i> Chi tiet tung san pham
         </div>
         <div class="card-body">
           <table
@@ -84,10 +133,12 @@
           >
             <thead class="table-dark text-center">
               <tr>
-                <th>Ảnh</th>
-                <th>Tên sản phẩm</th>
-                <th>Doanh thu</th>
-                <th>Tồn kho hiện tại</th>
+                <th>Anh</th>
+                <th>Ten san pham</th>
+                <th class="text-end">So luong ban</th>
+                <th class="text-end">Doanh thu</th>
+                <th>Ton kho hien tai</th>
+                <th>Chi tiet</th>
               </tr>
             </thead>
             <tbody>
@@ -95,15 +146,8 @@
                 <td class="text-center">
                   <img
                     th:src="@{/Content/HinhAnhPhongVu/{anh}(anh=${(item.sanPham.danhSachAnhs != null and !item.sanPham.danhSachAnhs.isEmpty()) ? item.sanPham.danhSachAnhs[0].tenAnh : 'no-image.jpg'})}"
-                    style="
-                      width: 50px;
-                      height: 50px;
-                      object-fit: contain;
-                      border: 1px solid #eee;
-                      padding: 2px;
-                      border-radius: 4px;
-                    "
-                    alt="Ảnh SP"
+                    style="width: 50px; height: 50px; object-fit: contain; border: 1px solid #eee; padding: 2px; border-radius: 4px"
+                    alt="Anh SP"
                   />
                 </td>
                 <td>
@@ -113,35 +157,173 @@
                   ></div>
                   <small
                     class="text-muted"
-                    th:text="'Mã: ' + ${item.sanPham.maSP}"
+                    th:text="'Ma: ' + ${item.sanPham.maSP}"
                   ></small>
                 </td>
+                <td class="text-end fw-bold" th:text="${item.soLuongBan}"></td>
                 <td
                   class="text-end text-success fw-bold"
-                  th:text="${#numbers.formatDecimal(item.thanhTien, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+                  th:text="${#numbers.formatDecimal(item.thanhTien, 0, 'COMMA', 0, 'POINT')} + ' d'"
                 ></td>
                 <td class="text-center">
                   <span
                     th:if="${item.sanPham.soLuongTon == 0}"
                     class="badge bg-danger"
-                    >Hết hàng</span
-                  >
+                  >Het hang</span>
                   <span
                     th:if="${item.sanPham.soLuongTon > 0 and item.sanPham.soLuongTon < 5}"
                     class="badge bg-warning text-dark"
-                    th:text="'Sắp hết (' + ${item.sanPham.soLuongTon} + ')'"
+                    th:text="'Sap het (' + ${item.sanPham.soLuongTon} + ')'"
                   ></span>
                   <span
                     th:if="${item.sanPham.soLuongTon >= 5}"
                     class="badge bg-secondary"
-                    th:text="'Còn: ' + ${item.sanPham.soLuongTon}"
+                    th:text="'Con: ' + ${item.sanPham.soLuongTon}"
                   ></span>
+                </td>
+                <td class="text-center">
+                  <a
+                    th:href="@{/admin/details-sp/{id}(id=${item.sanPham.maSP})}"
+                    class="btn btn-info btn-sm text-white"
+                  >Xem</a>
+                </td>
+              </tr>
+              <tr th:if="${DanhSachSP == null or DanhSachSP.isEmpty()}">
+                <td colspan="6" class="text-center text-muted py-4">
+                  Khong co san pham da ban trong thoi gian da chon.
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
+
+      <script th:inline="javascript">
+        (() => {
+          const labels = /*[[${ChartLabels}]]*/ [];
+          const revenues = /*[[${ChartDoanhThu}]]*/ [];
+          const quantities = /*[[${ChartSoLuong}]]*/ [];
+          const stocks = /*[[${TonKhoValues}]]*/ [];
+
+          const formatMoney = (value) =>
+            new Intl.NumberFormat("vi-VN").format(value || 0) + " d";
+
+          const fitCanvas = (canvas) => {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = Math.max(320, Math.floor(rect.width));
+            canvas.height = Number(canvas.getAttribute("height")) || 260;
+          };
+
+          const drawNoData = (canvas, text) => {
+            fitCanvas(canvas);
+            const ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#6c757d";
+            ctx.font = "14px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+          };
+
+          const shortLabel = (label) =>
+            (label || "").length > 24 ? label.slice(0, 23) + "..." : label || "";
+
+          const drawBarChart = (canvasId, values, valueFormatter, color) => {
+            const canvas = document.getElementById(canvasId);
+            fitCanvas(canvas);
+            const max = Math.max(...values, 0);
+            if (!labels.length || max <= 0) {
+              drawNoData(canvas, "Khong co du lieu de hien thi");
+              return;
+            }
+
+            const ctx = canvas.getContext("2d");
+            const left = 150;
+            const right = 24;
+            const top = 18;
+            const rowHeight = 28;
+            const barHeight = 16;
+            const chartWidth = canvas.width - left - right;
+            canvas.height = Math.max(240, top + values.length * rowHeight + 28);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = "12px Arial";
+
+            values.forEach((value, index) => {
+              const y = top + index * rowHeight;
+              const width = (value / max) * chartWidth;
+
+              ctx.fillStyle = "#212529";
+              ctx.textAlign = "right";
+              ctx.fillText(shortLabel(labels[index]), left - 8, y + 13);
+
+              ctx.fillStyle = "#e9ecef";
+              ctx.fillRect(left, y, chartWidth, barHeight);
+              ctx.fillStyle = color;
+              ctx.fillRect(left, y, width, barHeight);
+
+              ctx.fillStyle = "#495057";
+              ctx.textAlign = "left";
+              ctx.fillText(valueFormatter(value), left + width + 6, y + 13);
+            });
+          };
+
+          const drawGroupedChart = () => {
+            const canvas = document.getElementById("quantityChart");
+            fitCanvas(canvas);
+            const max = Math.max(...quantities, ...stocks, 0);
+            if (!labels.length || max <= 0) {
+              drawNoData(canvas, "Khong co du lieu de hien thi");
+              return;
+            }
+
+            const ctx = canvas.getContext("2d");
+            const left = 150;
+            const right = 24;
+            const top = 18;
+            const rowHeight = 34;
+            const barHeight = 10;
+            const chartWidth = canvas.width - left - right;
+            canvas.height = Math.max(260, top + labels.length * rowHeight + 34);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = "12px Arial";
+
+            labels.forEach((label, index) => {
+              const y = top + index * rowHeight;
+              const soldWidth = ((quantities[index] || 0) / max) * chartWidth;
+              const stockWidth = ((stocks[index] || 0) / max) * chartWidth;
+
+              ctx.fillStyle = "#212529";
+              ctx.textAlign = "right";
+              ctx.fillText(shortLabel(label), left - 8, y + 14);
+
+              ctx.fillStyle = "#0d6efd";
+              ctx.fillRect(left, y, soldWidth, barHeight);
+              ctx.fillStyle = "#ffc107";
+              ctx.fillRect(left, y + 13, stockWidth, barHeight);
+
+              ctx.fillStyle = "#495057";
+              ctx.textAlign = "left";
+              ctx.fillText(`Ban ${quantities[index] || 0} / Ton ${stocks[index] || 0}`, left + Math.max(soldWidth, stockWidth) + 6, y + 18);
+            });
+
+            ctx.fillStyle = "#0d6efd";
+            ctx.fillRect(left, canvas.height - 18, 12, 8);
+            ctx.fillStyle = "#212529";
+            ctx.fillText("So luong ban", left + 18, canvas.height - 10);
+            ctx.fillStyle = "#ffc107";
+            ctx.fillRect(left + 120, canvas.height - 18, 12, 8);
+            ctx.fillStyle = "#212529";
+            ctx.fillText("Ton kho", left + 138, canvas.height - 10);
+          };
+
+          const renderCharts = () => {
+            drawBarChart("revenueChart", revenues, formatMoney, "#198754");
+            drawGroupedChart();
+          };
+
+          window.addEventListener("resize", renderCharts);
+          renderCharts();
+        })();
+      </script>
     </div>
   </body>
 </html>

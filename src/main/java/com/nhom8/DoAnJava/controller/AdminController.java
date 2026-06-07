@@ -2,6 +2,10 @@ package com.nhom8.DoAnJava.controller;
 
 import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -89,6 +93,67 @@ public class AdminController {
         model.addAllAttributes(stats); // Đẩy tự động toàn bộ thống kê vào Model
 
         return "Admin/TrangAdmin";
+    }
+
+    @GetMapping("/thongke-sanpham")
+    public String thongKeSanPham(
+            @RequestParam(value = "thang", required = false) Integer thang,
+            @RequestParam(value = "nam", required = false) Integer nam,
+            Model model) {
+
+        int currentMonth = (thang != null) ? thang : LocalDate.now().getMonthValue();
+        int currentYear = (nam != null) ? nam : LocalDate.now().getYear();
+
+        List<HoaDon> hoaDons = hoaDonRepository.findByThangAndNam(currentMonth, currentYear);
+        Map<String, ThongKeSanPhamItem> thongKeTheoSanPham = new LinkedHashMap<>();
+
+        for (HoaDon hoaDon : hoaDons) {
+            if (laHoaDonDaHuy(hoaDon)) {
+                continue;
+            }
+
+            List<ChiTietHoaDon> chiTietHoaDons = chiTietHoaDonRepository.findByMaHD(hoaDon.getMaHD());
+            for (ChiTietHoaDon chiTiet : chiTietHoaDons) {
+                SanPham sanPham = chiTiet.getSanPham();
+                if (sanPham == null && chiTiet.getMaSP() != null) {
+                    sanPham = sanPhamRepository.findById(chiTiet.getMaSP()).orElse(null);
+                }
+                if (sanPham == null) {
+                    continue;
+                }
+
+                SanPham sanPhamThongKe = sanPham;
+                ThongKeSanPhamItem item = thongKeTheoSanPham.computeIfAbsent(
+                        sanPhamThongKe.getMaSP(),
+                        maSP -> new ThongKeSanPhamItem(sanPhamThongKe)
+                );
+                item.congSoLuong(parseSoLuong(chiTiet.getSoLuongSP_HD()));
+                item.congThanhTien(chiTiet.getThanhTien());
+            }
+        }
+
+        List<ThongKeSanPhamItem> danhSachSP = new ArrayList<>(thongKeTheoSanPham.values());
+        danhSachSP.sort(Comparator.comparing(ThongKeSanPhamItem::getThanhTien).reversed());
+
+        int tongSoLuongDaBan = danhSachSP.stream()
+                .mapToInt(ThongKeSanPhamItem::getSoLuongBan)
+                .sum();
+        BigDecimal tongDoanhThuSanPham = danhSachSP.stream()
+                .map(ThongKeSanPhamItem::getThanhTien)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        model.addAttribute("Thang", currentMonth);
+        model.addAttribute("Nam", currentYear);
+        model.addAttribute("TongSoLuongDaBan", tongSoLuongDaBan);
+        model.addAttribute("TongDoanhThuSanPham", tongDoanhThuSanPham);
+        model.addAttribute("DanhSachSP", danhSachSP);
+        model.addAttribute("ChartLabels", danhSachSP.stream().limit(8).map(item -> item.getSanPham().getTenSP()).toList());
+        model.addAttribute("ChartSoLuong", danhSachSP.stream().limit(8).map(ThongKeSanPhamItem::getSoLuongBan).toList());
+        model.addAttribute("ChartDoanhThu", danhSachSP.stream().limit(8).map(item -> item.getThanhTien().longValue()).toList());
+        model.addAttribute("TonKhoLabels", danhSachSP.stream().limit(8).map(item -> item.getSanPham().getTenSP()).toList());
+        model.addAttribute("TonKhoValues", danhSachSP.stream().limit(8).map(item -> item.getSanPham().getSoLuongTon() != null ? item.getSanPham().getSoLuongTon() : 0).toList());
+
+        return "Admin/ThongKeSanPham";
     }
 
     // 2. QUẢN LÝ DANH SÁCH SẢN PHẨM
@@ -691,6 +756,59 @@ public class AdminController {
             return new MoTa();
         }
         return moTas.get(0);
+    }
+
+    private boolean laHoaDonDaHuy(HoaDon hoaDon) {
+        if (hoaDon == null || hoaDon.getTrangThaiTT() == null) {
+            return false;
+        }
+
+        String trangThai = hoaDon.getTrangThaiTT().toLowerCase();
+        return trangThai.contains("huy") || trangThai.contains("há»§y");
+    }
+
+    private int parseSoLuong(String soLuong) {
+        if (soLuong == null || soLuong.trim().isEmpty()) {
+            return 0;
+        }
+
+        try {
+            return Integer.parseInt(soLuong.trim().replace(",", ""));
+        } catch (NumberFormatException ex) {
+            return 0;
+        }
+    }
+
+    public static class ThongKeSanPhamItem {
+        private final SanPham sanPham;
+        private int soLuongBan;
+        private BigDecimal thanhTien = BigDecimal.ZERO;
+
+        public ThongKeSanPhamItem(SanPham sanPham) {
+            this.sanPham = sanPham;
+        }
+
+        public SanPham getSanPham() {
+            return sanPham;
+        }
+
+        public int getSoLuongBan() {
+            return soLuongBan;
+        }
+
+        public BigDecimal getThanhTien() {
+            return thanhTien;
+        }
+
+        public void congSoLuong(int soLuong) {
+            this.soLuongBan += soLuong;
+        }
+
+        public void congThanhTien(BigDecimal thanhTien) {
+            if (thanhTien != null) {
+                this.thanhTien = this.thanhTien.add(thanhTien);
+            }
+        }
     }
 
     private void luuMoTaNeuCoDuLieu(SanPham sanPham, MoTa moTa) {

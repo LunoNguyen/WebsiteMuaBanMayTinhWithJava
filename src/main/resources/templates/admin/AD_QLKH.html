@@ -53,6 +53,24 @@
           </a>
         </div>
         <div class="card-body">
+          <div class="row g-2 mb-3">
+            <div class="col-md-8">
+              <input
+                type="search"
+                id="khSearch"
+                class="form-control"
+                placeholder="Tim theo ma, ten, email, so dien thoai, dia chi"
+              />
+            </div>
+            <div class="col-md-4">
+              <input
+                type="search"
+                id="khAddress"
+                class="form-control"
+                placeholder="Loc theo dia chi"
+              />
+            </div>
+          </div>
           <div class="table-responsive">
             <table
               class="table table-bordered table-hover table-striped align-middle"
@@ -67,8 +85,12 @@
                   <th style="width: 180px">Hành động</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr th:each="item : ${QLKH}">
+              <tbody id="khTableBody">
+                <tr
+                  th:each="item : ${QLKH}"
+                  th:data-search="${item.maKH + ' ' + item.tenKH + ' ' + item.emailKH + ' ' + item.sdtKH + ' ' + item.diaChiKH}"
+                  th:data-address="${item.diaChiKH}"
+                >
                   <td class="text-center" th:text="${item.maKH}"></td>
                   <td class="fw-bold" th:text="${item.tenKH}"></td>
                   <td th:text="${item.emailKH}"></td>
@@ -107,6 +129,31 @@
           </div>
         </div>
       </div>
+      <script>
+        (() => {
+          const search = document.getElementById("khSearch");
+          const address = document.getElementById("khAddress");
+          const rows = Array.from(document.querySelectorAll("#khTableBody tr"));
+
+          const normalize = (value) => (value || "").toString().toLowerCase();
+          const filterRows = () => {
+            const keyword = normalize(search.value);
+            const addressKeyword = normalize(address.value);
+
+            rows.forEach((row) => {
+              const rowText = normalize(row.dataset.search);
+              const rowAddress = normalize(row.dataset.address);
+              row.style.display =
+                rowText.includes(keyword) && rowAddress.includes(addressKeyword)
+                  ? ""
+                  : "none";
+            });
+          };
+
+          search.addEventListener("input", filterRows);
+          address.addEventListener("input", filterRows);
+        })();
+      </script>
     </div>
   </body>
 </html>

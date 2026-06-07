@@ -9,6 +9,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import com.nhom8.DoAnJava.model.SanPham;
 import com.nhom8.DoAnJava.repository.LoaiSanPhamRepository;
@@ -36,17 +40,64 @@ public class HomeController {
     }
 
     @GetMapping({"/", "/trang-chu"})
-    public String trangChu(Model model) {
-        // Tương đương: db.SANPHAMs.Take(12).Where(s => s.SOLUONGTON > 0).ToList();
-        List<SanPham> dssp = sanPhamRepository.findTop12BySoLuongTonGreaterThan(0);
-        model.addAttribute("dssp", dssp);
+    public String trangChu(
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            Model model
+    ) {
+        final int PAGE_SIZE = 15;
 
-        // Bơm danh sách trực tiếp từ Database vào giao diện
+        if (page < 1) {
+            page = 1;
+        }
+
+        Pageable pageable = PageRequest.of(
+                page - 1,
+                PAGE_SIZE,
+                Sort.by(Sort.Direction.DESC, "maSP")
+        );
+
+        Page<SanPham> pageSanPham = sanPhamRepository.findAll(pageable);
+
+        int totalPages = pageSanPham.getTotalPages();
+        if (totalPages > 0 && page > totalPages) {
+            page = totalPages;
+            pageable = PageRequest.of(
+                    page - 1,
+                    PAGE_SIZE,
+                    Sort.by(Sort.Direction.DESC, "maSP")
+            );
+            pageSanPham = sanPhamRepository.findAll(pageable);
+            totalPages = pageSanPham.getTotalPages();
+        }
+
+        int maxPageDisplay = 10;
+        int startPage = 1;
+        int endPage = totalPages;
+
+        if (totalPages > maxPageDisplay) {
+            startPage = Math.max(1, page - 4);
+            endPage = startPage + maxPageDisplay - 1;
+
+            if (endPage > totalPages) {
+                endPage = totalPages;
+                startPage = endPage - maxPageDisplay + 1;
+            }
+        }
+
+        model.addAttribute("dssp", pageSanPham.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("totalItems", pageSanPham.getTotalElements());
+        model.addAttribute("pageSize", PAGE_SIZE);
+        model.addAttribute("startPage", startPage);
+        model.addAttribute("endPage", endPage);
+
         model.addAttribute("dsnsx", nhaSanXuatRepository.findAll());
         model.addAttribute("dslsp", loaiSanPhamRepository.findAll());
 
         return "home/TrangChu";
     }
+
 
     @GetMapping("/chi-tiet-san-pham/{id}")
     public String chiTietSanPham(@PathVariable String id, Model model) {

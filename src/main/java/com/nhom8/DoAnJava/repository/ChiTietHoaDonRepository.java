@@ -11,4 +11,5 @@ import com.nhom8.DoAnJava.model.ChiTietHoaDonId;
 @Repository
 public interface ChiTietHoaDonRepository extends JpaRepository<ChiTietHoaDon, ChiTietHoaDonId> {
     List<ChiTietHoaDon> findByMaHD(String maHD);
+    boolean existsByMaSP(String maSP);
 }

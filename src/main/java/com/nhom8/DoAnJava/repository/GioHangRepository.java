@@ -12,4 +12,5 @@ public interface GioHangRepository extends JpaRepository<GioHang, Integer> {
     // Custom query: Lấy toàn bộ sản phẩm trong giỏ hàng của một tài khoản
     List<GioHang> findByMaTK(String maTK);
     GioHang findByMaTKAndMaSP(String maTK, String maSP);
+    void deleteByMaSP(String maSP);
 }

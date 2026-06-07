@@ -26,6 +26,35 @@
         <a th:href="@{/admin/create-sp}" class="btn btn-primary btn-sm">Thêm mới</a>
       </div>
       <div class="card-body">
+        <div class="row g-2 mb-3">
+          <div class="col-lg-4 col-md-6">
+            <input
+              type="search"
+              id="spSearch"
+              class="form-control"
+              placeholder="Tim theo ma hoac ten san pham"
+            />
+          </div>
+          <div class="col-lg-2 col-md-6">
+            <select id="spStatus" class="form-select">
+              <option value="">Tat ca trang thai</option>
+              <option value="in-stock">Con hang</option>
+              <option value="out-stock">Het hang</option>
+            </select>
+          </div>
+          <div class="col-lg-2 col-md-6">
+            <input type="number" id="spMinPrice" class="form-control" min="0" placeholder="Gia tu" />
+          </div>
+          <div class="col-lg-2 col-md-6">
+            <input type="number" id="spMaxPrice" class="form-control" min="0" placeholder="Gia den" />
+          </div>
+          <div class="col-lg-1 col-md-6">
+            <input type="number" id="spMinStock" class="form-control" min="0" placeholder="Ton tu" />
+          </div>
+          <div class="col-lg-1 col-md-6">
+            <input type="number" id="spMaxStock" class="form-control" min="0" placeholder="Ton den" />
+          </div>
+        </div>
         <div class="table-responsive">
           <table class="table table-bordered table-striped table-hover align-middle">
             <thead class="table-dark text-center">
@@ -38,8 +67,14 @@
                 <th style="width: 250px">Hành động</th>
               </tr>
             </thead>
-            <tbody>
-              <tr th:each="item : ${QLSP}">
+            <tbody id="spTableBody">
+              <tr
+                th:each="item : ${QLSP}"
+                th:data-search="${item.maSP + ' ' + item.tenSP}"
+                th:data-price="${item.donGiaSP != null ? item.donGiaSP : 0}"
+                th:data-stock="${item.soLuongTon != null ? item.soLuongTon : 0}"
+                th:data-status="${item.soLuongTon > 0 ? 'in-stock' : 'out-stock'}"
+              >
                 <td class="text-center" th:text="${item.maSP}"></td>
                 <td class="fw-bold text-primary" th:text="${item.tenSP}"></td>
                 <td class="text-end fw-bold"
@@ -73,6 +108,48 @@
         </div>
       </div>
     </div>
+    <script>
+      (() => {
+        const search = document.getElementById("spSearch");
+        const status = document.getElementById("spStatus");
+        const minPrice = document.getElementById("spMinPrice");
+        const maxPrice = document.getElementById("spMaxPrice");
+        const minStock = document.getElementById("spMinStock");
+        const maxStock = document.getElementById("spMaxStock");
+        const rows = Array.from(document.querySelectorAll("#spTableBody tr"));
+
+        const normalize = (value) => (value || "").toString().toLowerCase();
+        const numberOrNull = (value) => value === "" ? null : Number(value);
+        const inRange = (value, min, max) =>
+          (min === null || value >= min) && (max === null || value <= max);
+
+        const filterRows = () => {
+          const keyword = normalize(search.value);
+          const selectedStatus = status.value;
+          const priceMin = numberOrNull(minPrice.value);
+          const priceMax = numberOrNull(maxPrice.value);
+          const stockMin = numberOrNull(minStock.value);
+          const stockMax = numberOrNull(maxStock.value);
+
+          rows.forEach((row) => {
+            const price = Number(row.dataset.price || 0);
+            const stock = Number(row.dataset.stock || 0);
+            const visible =
+              normalize(row.dataset.search).includes(keyword) &&
+              (!selectedStatus || row.dataset.status === selectedStatus) &&
+              inRange(price, priceMin, priceMax) &&
+              inRange(stock, stockMin, stockMax);
+
+            row.style.display = visible ? "" : "none";
+          });
+        };
+
+        [search, status, minPrice, maxPrice, minStock, maxStock].forEach((item) => {
+          item.addEventListener("input", filterRows);
+          item.addEventListener("change", filterRows);
+        });
+      })();
+    </script>
   </div>
 </body>
 

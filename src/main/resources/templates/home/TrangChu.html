@@ -125,6 +125,79 @@
         border-color: #3456c4 !important;
       }
 
+      .empty-product-box {
+        min-height: 180px;
+        border: 1px dashed #cbd5e1;
+        border-radius: 14px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #64748b;
+        background-color: #ffffff;
+        font-weight: 600;
+      }
+
+      .pagination-wrapper {
+        margin: 34px 0 48px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .pagination-info {
+        font-size: 14px;
+        color: #64748b;
+        margin-bottom: 4px;
+      }
+
+      .google-pagination {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+
+      .google-pages {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .google-page-number,
+      .google-page-nav {
+        text-decoration: none;
+        font-weight: 600;
+        color: #1a73e8;
+        min-width: 28px;
+        height: 34px;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+      }
+
+      .google-page-number:hover,
+      .google-page-nav:hover {
+        background-color: #e8f0fe;
+        color: #0b57d0;
+      }
+
+      .google-page-number.active {
+        background-color: #3456c4;
+        color: #ffffff;
+        pointer-events: none;
+      }
+
+      .google-page-nav.disabled {
+        color: #94a3b8;
+        pointer-events: none;
+        cursor: not-allowed;
+      }
+
       @media (max-width: 768px) {
         .home-banner {
           height: 170px;
@@ -144,6 +217,14 @@
 
         .product-price {
           font-size: 17px;
+        }
+
+        .google-pagination {
+          gap: 8px;
+        }
+
+        .google-pages {
+          gap: 6px;
         }
       }
     </style>
@@ -197,7 +278,7 @@
     </div>
 
     <div class="container product-wrapper">
-      <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-4">
+      <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-4" th:if="${dssp != null and !dssp.isEmpty()}">
         <div th:each="item : ${dssp}" class="col d-flex">
           <div class="card product-card">
             <div class="product-img-box">
@@ -235,6 +316,50 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <div class="empty-product-box" th:if="${dssp == null or dssp.isEmpty()}">
+        Không có sản phẩm nào để hiển thị.
+      </div>
+
+      <div class="pagination-wrapper" th:if="${totalPages != null and totalPages > 1}">
+        <div class="pagination-info">
+          Đang hiển thị
+          <span th:text="${#lists.size(dssp)}">15</span>
+          / 
+          <span th:text="${totalItems}">0</span>
+          sản phẩm
+        </div>
+
+        <nav class="google-pagination" aria-label="Phân trang sản phẩm">
+          <a
+            class="google-page-nav"
+            th:classappend="${currentPage == 1} ? ' disabled'"
+            th:href="@{/(page=${currentPage > 1 ? currentPage - 1 : 1})}"
+          >
+            Trước
+          </a>
+
+          <div class="google-pages">
+            <a
+              th:each="i : ${#numbers.sequence(startPage, endPage)}"
+              class="google-page-number"
+              th:classappend="${i == currentPage} ? ' active'"
+              th:href="@{/(page=${i})}"
+              th:text="${i}"
+            >
+              1
+            </a>
+          </div>
+
+          <a
+            class="google-page-nav"
+            th:classappend="${currentPage == totalPages} ? ' disabled'"
+            th:href="@{/(page=${currentPage < totalPages ? currentPage + 1 : totalPages})}"
+          >
+            Tiếp
+          </a>
+        </nav>
       </div>
     </div>
   </body>

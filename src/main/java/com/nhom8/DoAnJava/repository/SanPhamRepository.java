@@ -13,8 +13,8 @@ import com.nhom8.DoAnJava.model.SanPham;
 @Repository
 public interface SanPhamRepository extends JpaRepository<SanPham, String> {
     
-    // Tìm 12 sản phẩm có số lượng tồn lớn hơn tham số truyền vào
-    List<SanPham> findTop12BySoLuongTonGreaterThan(Integer soLuongTon);
+    // Tìm 15 sản phẩm có số lượng tồn lớn hơn tham số truyền vào
+    List<SanPham> findTop15BySoLuongTonGreaterThan(Integer soLuongTon);
 
     // Ép Hibernate nạp kèm dữ liệu mô tả ngay khi lọc theo Nhà Sản Xuất
     @Query("SELECT DISTINCT s FROM SanPham s LEFT JOIN FETCH s.moTas WHERE s.maNSX = :maNSX")

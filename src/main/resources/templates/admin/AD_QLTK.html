@@ -23,6 +23,24 @@
           >
         </div>
         <div class="card-body">
+          <div class="row g-2 mb-3">
+            <div class="col-md-8">
+              <input
+                type="search"
+                id="tkSearch"
+                class="form-control"
+                placeholder="Tim theo tai khoan, ma NV, ma KH, email"
+              />
+            </div>
+            <div class="col-md-4">
+              <select id="tkRole" class="form-select">
+                <option value="">Tat ca phan quyen</option>
+                <option value="Admin">Quan tri</option>
+                <option value="NhanVien">Nhan vien</option>
+                <option value="KhachHang">Khach hang</option>
+              </select>
+            </div>
+          </div>
           <div class="table-responsive">
             <table
               class="table table-bordered table-striped table-hover align-middle"
@@ -37,8 +55,12 @@
                   <th style="min-width: 250px">Hành động</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr th:each="item : ${QLTK}">
+              <tbody id="tkTableBody">
+                <tr
+                  th:each="item : ${QLTK}"
+                  th:data-search="${item.maTK + ' ' + item.maNV + ' ' + item.maKH + ' ' + item.emailTK}"
+                  th:data-role="${item.loaiTaiKhoan}"
+                >
                   <td class="fw-bold text-primary" th:text="${item.maTK}"></td>
                   <td
                     class="text-center"
@@ -108,6 +130,30 @@
           </div>
         </div>
       </div>
+      <script>
+        (() => {
+          const search = document.getElementById("tkSearch");
+          const role = document.getElementById("tkRole");
+          const rows = Array.from(document.querySelectorAll("#tkTableBody tr"));
+
+          const normalize = (value) => (value || "").toString().toLowerCase();
+          const filterRows = () => {
+            const keyword = normalize(search.value);
+            const selectedRole = role.value;
+
+            rows.forEach((row) => {
+              const visible =
+                normalize(row.dataset.search).includes(keyword) &&
+                (!selectedRole || row.dataset.role === selectedRole);
+
+              row.style.display = visible ? "" : "none";
+            });
+          };
+
+          search.addEventListener("input", filterRows);
+          role.addEventListener("change", filterRows);
+        })();
+      </script>
     </div>
   </body>
 </html>

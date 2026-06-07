@@ -23,6 +23,24 @@
           >
         </div>
         <div class="card-body">
+          <div class="row g-2 mb-3">
+            <div class="col-md-8">
+              <input
+                type="search"
+                id="nvSearch"
+                class="form-control"
+                placeholder="Tim theo ma NV, ten, email, so dien thoai, dia chi"
+              />
+            </div>
+            <div class="col-md-4">
+              <input
+                type="search"
+                id="nvRole"
+                class="form-control"
+                placeholder="Loc theo ma chuc vu"
+              />
+            </div>
+          </div>
           <div class="table-responsive">
             <table
               class="table table-bordered table-striped table-hover align-middle"
@@ -38,8 +56,13 @@
                   <th style="width: 150px">Hành động</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr th:each="item : ${QLNV}" th:if="${!QLNV.isEmpty()}">
+              <tbody id="nvTableBody">
+                <tr
+                  th:each="item : ${QLNV}"
+                  th:if="${!QLNV.isEmpty()}"
+                  th:data-search="${item.maNV + ' ' + item.maCV + ' ' + item.tenNV + ' ' + item.emailNV + ' ' + item.sdtNV + ' ' + item.diaChiNV}"
+                  th:data-role="${item.maCV}"
+                >
                   <td class="text-center" th:text="${item.maNV}"></td>
                   <td class="text-center" th:text="${item.maCV}"></td>
                   <td class="fw-bold" th:text="${item.tenNV}"></td>
@@ -80,6 +103,31 @@
           </div>
         </div>
       </div>
+      <script>
+        (() => {
+          const search = document.getElementById("nvSearch");
+          const role = document.getElementById("nvRole");
+          const rows = Array.from(document.querySelectorAll("#nvTableBody tr[data-search]"));
+
+          const normalize = (value) => (value || "").toString().toLowerCase();
+          const filterRows = () => {
+            const keyword = normalize(search.value);
+            const roleKeyword = normalize(role.value);
+
+            rows.forEach((row) => {
+              const rowText = normalize(row.dataset.search);
+              const rowRole = normalize(row.dataset.role);
+              row.style.display =
+                rowText.includes(keyword) && rowRole.includes(roleKeyword)
+                  ? ""
+                  : "none";
+            });
+          };
+
+          search.addEventListener("input", filterRows);
+          role.addEventListener("input", filterRows);
+        })();
+      </script>
     </div>
   </body>
 </html>

@@ -36,9 +36,11 @@ import com.nhom8.DoAnJava.repository.DanhSachAnhRepository;
 import com.nhom8.DoAnJava.repository.CapNhatGiaRepository;
 import com.nhom8.DoAnJava.repository.ChiTietHoaDonRepository;
 import com.nhom8.DoAnJava.repository.ChucVuRepository;
+import com.nhom8.DoAnJava.repository.GioHangRepository;
 import com.nhom8.DoAnJava.repository.HoaDonRepository;
 import com.nhom8.DoAnJava.repository.KhachHangRepository;
 import com.nhom8.DoAnJava.repository.LoaiSanPhamRepository;
+import com.nhom8.DoAnJava.repository.MoTaRepository;
 import com.nhom8.DoAnJava.repository.NhaCungCapRepository;
 import com.nhom8.DoAnJava.repository.NhaSanXuatRepository;
 import com.nhom8.DoAnJava.repository.NhanVienRepository;
@@ -51,6 +53,8 @@ import jakarta.servlet.http.HttpSession;
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
+
+    private static final Path UPLOAD_DIR = Paths.get("src/main/resources/static/Content/HinhAnhPhongVu");
 
     @Autowired private KhachHangRepository khachHangRepository; 
     @Autowired private NhanVienRepository nhanVienRepository;
@@ -65,6 +69,8 @@ public class AdminController {
     @Autowired private DanhSachAnhRepository danhSachAnhRepository;
     @Autowired private ChiTietHoaDonRepository chiTietHoaDonRepository;
     @Autowired private ChucVuRepository chucVuRepository;
+    @Autowired private MoTaRepository moTaRepository;
+    @Autowired private GioHangRepository gioHangRepository;
 
     // 1. TRANG DASHBOARD ADMIN MAIN
     @GetMapping("/trang-admin")
@@ -192,6 +198,7 @@ public class AdminController {
     @Transactional
     public String createSanPhamPost(
             @ModelAttribute SanPham sanPham,
+            @ModelAttribute MoTa moTa,
             @RequestParam(value = "fileAnhs", required = false) MultipartFile[] fileAnhs,
             RedirectAttributes redirectAttributes) {
 
@@ -216,36 +223,8 @@ public class AdminController {
             }
 
             sanPhamRepository.save(sanPham);
-
-            if (fileAnhs != null && fileAnhs.length > 0) {
-                Path uploadDir = Paths.get("src/main/resources/static/Content/HinhAnhPhongVu");
-                Files.createDirectories(uploadDir);
-
-                int index = 1;
-
-                for (MultipartFile file : fileAnhs) {
-                    if (file == null || file.isEmpty()) {
-                        continue;
-                    }
-
-                    String originalName = file.getOriginalFilename();
-                    String extension = layDuoiFile(originalName);
-
-                    String tenAnh = maSP + "_" + String.format("%02d", index) + extension;
-
-                    Path filePath = uploadDir.resolve(tenAnh);
-                    Files.write(filePath, file.getBytes());
-
-                    DanhSachAnh anh = new DanhSachAnh();
-                    anh.setMaDsa(generateMaDSA());
-                    anh.setSanPham(sanPham);
-                    anh.setTenAnh(tenAnh);
-
-                    danhSachAnhRepository.save(anh);
-
-                    index++;
-                }
-            }
+            luuMoTaNeuCoDuLieu(sanPham, moTa);
+            luuAnhSanPham(sanPham, fileAnhs);
 
             redirectAttributes.addFlashAttribute(
                     "Success",
@@ -275,6 +254,7 @@ public class AdminController {
         
         // Đẩy dữ liệu cũ và danh sách Dropdown ra View
         model.addAttribute("sanPham", sp);
+        model.addAttribute("moTa", layMoTaDauTien(sp.getMaSP()));
         model.addAttribute("dsLoai", loaiSanPhamRepository.findAll());
         model.addAttribute("dsNSX", nhaSanXuatRepository.findAll());
         model.addAttribute("dsNCC", nhaCungCapRepository.findAll());
@@ -283,7 +263,12 @@ public class AdminController {
     }
 
     @PostMapping("/edit-sp")
-    public String editSanPhamPost(@ModelAttribute SanPham sanPhamMoi, RedirectAttributes redirectAttributes) {
+    @Transactional
+    public String editSanPhamPost(
+            @ModelAttribute SanPham sanPhamMoi,
+            @ModelAttribute MoTa moTa,
+            @RequestParam(value = "fileAnhs", required = false) MultipartFile[] fileAnhs,
+            RedirectAttributes redirectAttributes) {
         try {
             SanPham spCu = sanPhamRepository.findById(sanPhamMoi.getMaSP()).orElse(null);
             if(spCu != null) {
@@ -297,6 +282,12 @@ public class AdminController {
                 spCu.setMaNSX(sanPhamMoi.getMaNSX());
                 
                 sanPhamRepository.save(spCu);
+                capNhatMoTa(spCu, moTa);
+
+                if (coFileAnhMoi(fileAnhs)) {
+                    xoaAnhSanPham(spCu.getMaSP());
+                    luuAnhSanPham(spCu, fileAnhs);
+                }
                 redirectAttributes.addFlashAttribute("Success", "Cập nhật sản phẩm thành công!");
             }
         } catch (Exception e) {
@@ -613,14 +604,15 @@ public class AdminController {
 
     // 9. THAO TÁC XÓA SẢN PHẨM (HỖ TRỢ BẮT LỖI KHÓA NGOẠI)
     @PostMapping("/xoa-sanpham/{id}")
+    @Transactional
     public String xoaSanPham(@PathVariable("id") String id, RedirectAttributes redirectAttributes) {
         try {
-            sanPhamRepository.deleteById(id);
+            xoaSanPhamVaDuLieuLienQuan(id, redirectAttributes);
             redirectAttributes.addFlashAttribute("Success", "Xóa sản phẩm thành công!");
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("Error", "Lỗi Khóa Ngoại! Sản phẩm này đã tồn tại trong Chi Tiết Đơn Hàng!");
         }
-        return "redirect:ql-sanpham";
+        return "redirect:/admin/ql-sanpham";
     }
 
     @GetMapping("/details-sp/{id}")
@@ -675,12 +667,13 @@ public class AdminController {
     }
 
     @PostMapping("/delete-sp")
+    @Transactional
     public String deleteSanPhamPost(
             @RequestParam("maSP") String maSP,
             RedirectAttributes redirectAttributes) {
 
         try {
-            sanPhamRepository.deleteById(maSP);
+            xoaSanPhamVaDuLieuLienQuan(maSP, redirectAttributes);
             redirectAttributes.addFlashAttribute("Success", "Xóa sản phẩm thành công!");
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute(
@@ -690,6 +683,168 @@ public class AdminController {
         }
 
         return "redirect:/admin/ql-sanpham";
+    }
+
+    private MoTa layMoTaDauTien(String maSP) {
+        List<MoTa> moTas = moTaRepository.findByMaSP(maSP);
+        if (moTas == null || moTas.isEmpty()) {
+            return new MoTa();
+        }
+        return moTas.get(0);
+    }
+
+    private void luuMoTaNeuCoDuLieu(SanPham sanPham, MoTa moTa) {
+        if (!coDuLieuMoTa(moTa)) {
+            return;
+        }
+
+        moTa.setMaMT(generateMaMT());
+        moTa.setMaSP(sanPham.getMaSP());
+        chuanHoaMoTa(moTa);
+        moTaRepository.save(moTa);
+    }
+
+    private void capNhatMoTa(SanPham sanPham, MoTa moTaMoi) {
+        List<MoTa> moTasCu = moTaRepository.findByMaSP(sanPham.getMaSP());
+
+        if (!coDuLieuMoTa(moTaMoi)) {
+            if (moTasCu != null && !moTasCu.isEmpty()) {
+                moTaRepository.deleteByMaSP(sanPham.getMaSP());
+            }
+            return;
+        }
+
+        MoTa moTaCanLuu = (moTasCu != null && !moTasCu.isEmpty()) ? moTasCu.get(0) : new MoTa();
+        if (moTaCanLuu.getMaMT() == null || moTaCanLuu.getMaMT().trim().isEmpty()) {
+            moTaCanLuu.setMaMT(generateMaMT());
+        }
+        moTaCanLuu.setMaSP(sanPham.getMaSP());
+        moTaCanLuu.setRam(chuanHoaChuoi(moTaMoi.getRam()));
+        moTaCanLuu.setCpu(chuanHoaChuoi(moTaMoi.getCpu()));
+        moTaCanLuu.setRom(chuanHoaChuoi(moTaMoi.getRom()));
+        moTaCanLuu.setManHinh(chuanHoaChuoi(moTaMoi.getManHinh()));
+        moTaCanLuu.setVga(chuanHoaChuoi(moTaMoi.getVga()));
+        moTaCanLuu.setKhac(chuanHoaChuoi(moTaMoi.getKhac()));
+        moTaRepository.save(moTaCanLuu);
+    }
+
+    private boolean coDuLieuMoTa(MoTa moTa) {
+        return moTa != null
+                && (coGiaTri(moTa.getRam())
+                        || coGiaTri(moTa.getCpu())
+                        || coGiaTri(moTa.getRom())
+                        || coGiaTri(moTa.getManHinh())
+                        || coGiaTri(moTa.getVga())
+                        || coGiaTri(moTa.getKhac()));
+    }
+
+    private void chuanHoaMoTa(MoTa moTa) {
+        moTa.setRam(chuanHoaChuoi(moTa.getRam()));
+        moTa.setCpu(chuanHoaChuoi(moTa.getCpu()));
+        moTa.setRom(chuanHoaChuoi(moTa.getRom()));
+        moTa.setManHinh(chuanHoaChuoi(moTa.getManHinh()));
+        moTa.setVga(chuanHoaChuoi(moTa.getVga()));
+        moTa.setKhac(chuanHoaChuoi(moTa.getKhac()));
+    }
+
+    private boolean coFileAnhMoi(MultipartFile[] fileAnhs) {
+        if (fileAnhs == null) {
+            return false;
+        }
+
+        for (MultipartFile file : fileAnhs) {
+            if (file != null && !file.isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void luuAnhSanPham(SanPham sanPham, MultipartFile[] fileAnhs) throws Exception {
+        if (!coFileAnhMoi(fileAnhs)) {
+            return;
+        }
+
+        Files.createDirectories(UPLOAD_DIR);
+        int index = danhSachAnhRepository.findBySanPham_MaSP(sanPham.getMaSP()).size() + 1;
+
+        for (MultipartFile file : fileAnhs) {
+            if (file == null || file.isEmpty()) {
+                continue;
+            }
+
+            String tenAnh = sanPham.getMaSP() + "_" + String.format("%02d", index) + layDuoiFile(file.getOriginalFilename());
+            Path filePath = UPLOAD_DIR.resolve(tenAnh);
+            Files.write(filePath, file.getBytes());
+
+            DanhSachAnh anh = new DanhSachAnh();
+            anh.setMaDsa(generateMaDSA());
+            anh.setSanPham(sanPham);
+            anh.setTenAnh(tenAnh);
+            danhSachAnhRepository.save(anh);
+            index++;
+        }
+    }
+
+    private void xoaAnhSanPham(String maSP) throws Exception {
+        List<DanhSachAnh> anhs = danhSachAnhRepository.findBySanPham_MaSP(maSP);
+        danhSachAnhRepository.deleteBySanPham_MaSP(maSP);
+        for (DanhSachAnh anh : anhs) {
+            xoaFileAnh(anh.getTenAnh());
+        }
+    }
+
+    private void xoaSanPhamVaDuLieuLienQuan(String maSP, RedirectAttributes redirectAttributes) throws Exception {
+        if (chiTietHoaDonRepository.existsByMaSP(maSP)) {
+            throw new IllegalStateException("San pham da co trong chi tiet hoa don, khong the xoa.");
+        }
+
+        List<DanhSachAnh> anhs = danhSachAnhRepository.findBySanPham_MaSP(maSP);
+        gioHangRepository.deleteByMaSP(maSP);
+        danhSachAnhRepository.deleteBySanPham_MaSP(maSP);
+        moTaRepository.deleteByMaSP(maSP);
+        sanPhamRepository.deleteById(maSP);
+
+        for (DanhSachAnh anh : anhs) {
+            xoaFileAnh(anh.getTenAnh());
+        }
+
+        redirectAttributes.addFlashAttribute("Success", "Xoa san pham thanh cong!");
+    }
+
+    private void xoaFileAnh(String tenAnh) throws Exception {
+        if (!coGiaTri(tenAnh)) {
+            return;
+        }
+
+        Path uploadDir = UPLOAD_DIR.toAbsolutePath().normalize();
+        Path filePath = uploadDir.resolve(tenAnh).normalize();
+        if (filePath.startsWith(uploadDir)) {
+            Files.deleteIfExists(filePath);
+        }
+    }
+
+    private boolean coGiaTri(String value) {
+        return value != null && !value.trim().isEmpty();
+    }
+
+    private String chuanHoaChuoi(String value) {
+        return coGiaTri(value) ? value.trim() : null;
+    }
+
+    private synchronized String generateMaMT() {
+        MoTa last = moTaRepository.findTopByOrderByMaMTDesc();
+
+        if (last == null || last.getMaMT() == null) {
+            return "MT001";
+        }
+
+        try {
+            int next = Integer.parseInt(last.getMaMT().substring(2)) + 1;
+            return String.format("MT%03d", next);
+        } catch (Exception e) {
+            return "MT" + System.currentTimeMillis() % 1000000;
+        }
     }
 
     private String layDuoiFile(String fileName) {

@@ -1,6 +1,7 @@
 package com.nhom8.DoAnJava.model;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,6 +10,7 @@ import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 @Entity
 @Table(name = "CHITIETHOADON")
@@ -62,6 +64,24 @@ public class ChiTietHoaDon {
 
     public void setThanhTien(BigDecimal thanhTien) {
         this.thanhTien = thanhTien;
+    }
+
+    @Transient
+    public BigDecimal getDonGiaHD() {
+        if (thanhTien == null || soLuongSP_HD == null || soLuongSP_HD.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            BigDecimal soLuong = new BigDecimal(soLuongSP_HD.trim().replace(",", ""));
+            if (soLuong.compareTo(BigDecimal.ZERO) == 0) {
+                return null;
+            }
+
+            return thanhTien.divide(soLuong, 0, RoundingMode.HALF_UP);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 
     public HoaDon getHoaDon() {

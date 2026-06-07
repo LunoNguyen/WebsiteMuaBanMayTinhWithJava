@@ -288,7 +288,7 @@
                   <td class="text-center" th:text="${item.soLuongSP_HD}"></td>
                   <td
                     class="text-end"
-                    th:text="${item.sanPham != null && item.sanPham.donGiaSP != null ? #numbers.formatDecimal(item.sanPham.donGiaSP, 0, 'COMMA', 0, 'POINT') + ' đ' : ''}"
+                    th:text="${item.donGiaHD != null ? #numbers.formatDecimal(item.donGiaHD, 0, 'COMMA', 0, 'POINT') + ' đ' : ''}"
                   ></td>
                   <td
                     class="text-end fw-bold"

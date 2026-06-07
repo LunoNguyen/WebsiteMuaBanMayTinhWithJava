@@ -1,267 +1,326 @@
 <!doctype html>
 <html
-  xmlns:th="http://www.thymeleaf.org"
-  th:replace="~{shared/_LayoutAdmin :: layout(~{::div.container-fluid})}"
+        xmlns:th="http://www.thymeleaf.org"
+        th:replace="~{shared/_LayoutAdmin :: layout(~{::div.container-fluid})}"
 >
-  <body>
-    <div class="container-fluid px-4">
-      <h1 class="mt-4">Quản lý Nhập Hàng</h1>
-      <ol class="breadcrumb mb-4">
-        <li class="breadcrumb-item">
-          <a th:href="@{/admin/trang-admin}">Tổng quan</a>
-        </li>
-        <li class="breadcrumb-item active">Nhập kho</li>
-      </ol>
+<body>
+<div class="container-fluid px-4">
+  <h1 class="mt-4">Quản lý Nhập Hàng</h1>
+  <ol class="breadcrumb mb-4">
+    <li class="breadcrumb-item">
+      <a th:href="@{/admin/trang-admin}">Tổng quan</a>
+    </li>
+    <li class="breadcrumb-item active">Nhập kho</li>
+  </ol>
 
-      <div
-        th:if="${Success != null}"
-        class="alert alert-success alert-dismissible fade show"
-      >
-        <strong>Thành công!</strong> <span th:text="${Success}"></span>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="alert"
-        ></button>
-      </div>
-      <div
-        th:if="${Error != null}"
-        class="alert alert-danger alert-dismissible fade show"
-      >
-        <strong>Lỗi!</strong> <span th:text="${Error}"></span>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="alert"
-        ></button>
-      </div>
+  <div
+          th:if="${Success != null}"
+          class="alert alert-success alert-dismissible fade show"
+  >
+    <strong>Thành công!</strong> <span th:text="${Success}"></span>
+    <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+    ></button>
+  </div>
+  <div
+          th:if="${Error != null}"
+          class="alert alert-danger alert-dismissible fade show"
+  >
+    <strong>Lỗi!</strong> <span th:text="${Error}"></span>
+    <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+    ></button>
+  </div>
 
-      <div class="row">
-        <div class="col-xl-7">
-          <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-primary text-white fw-bold">
-              <i class="bi bi-keyboard"></i> Nhập Sản Phẩm Mới (Thủ công)
-            </div>
-            <div class="card-body">
-              <form
-                th:action="@{/admin/nhap-thu-cong}"
-                method="post"
-                enctype="multipart/form-data"
-              >
-                <h6 class="text-primary fw-bold border-bottom pb-2 mb-3">
-                  1. Thông tin cơ bản (Bảng SANPHAM)
-                </h6>
-                <div class="row mb-3">
-                  <div class="col-md-8">
-                    <label class="form-label fw-bold small">Tên sản phẩm</label>
-                    <input
-                      type="text"
-                      name="TENSP"
-                      class="form-control"
-                      required
-                      placeholder="VD: Laptop Dell XPS 13"
-                    />
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label fw-bold small">Đơn vị tính</label>
-                    <input
-                      type="text"
-                      name="DONVT"
-                      class="form-control"
-                      placeholder="Cái/Bộ"
-                    />
-                  </div>
-                </div>
-
-                <div class="row mb-3">
-                  <div class="col-md-6">
-                    <label class="form-label fw-bold small"
-                      >Giá bán (VNĐ)</label
-                    >
-                    <input
-                      type="number"
-                      name="DONGIA_SP"
-                      class="form-control"
-                      required
-                    />
-                  </div>
-                  <div class="col-md-6">
-                    <label class="form-label fw-bold small">Số lượng tồn</label>
-                    <input
-                      type="number"
-                      name="SOLUONGTON"
-                      class="form-control"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div class="row mb-3">
-                  <div class="col-md-4">
-                    <label class="form-label fw-bold small">Loại SP</label>
-                    <select name="MALOAI" class="form-select">
-                      <option
-                        th:each="loai : ${dsLoai}"
-                        th:value="${loai.maLoai}"
-                        th:text="${loai.tenLoai}"
-                      ></option>
-                    </select>
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label fw-bold small">Nhà Sản Xuất</label>
-                    <select name="MANSX" class="form-select">
-                      <option
-                        th:each="nsx : ${dsNSX}"
-                        th:value="${nsx.maNSX}"
-                        th:text="${nsx.tenNSX}"
-                      ></option>
-                    </select>
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label fw-bold small">Nhà Cung Cấp</label>
-                    <select name="MANCC" class="form-select">
-                      <option
-                        th:each="ncc : ${dsNCC}"
-                        th:value="${ncc.maNCC}"
-                        th:text="${ncc.tenNCC}"
-                      ></option>
-                    </select>
-                  </div>
-                </div>
-
-                <h6 class="text-primary fw-bold border-bottom pb-2 mb-3 mt-4">
-                  2. Cấu hình chi tiết (Bảng MOTA)
-                </h6>
-                <div class="row mb-2">
-                  <div class="col-md-6 mb-2">
-                    <label class="small text-muted">CPU (Vi xử lý)</label>
-                    <input
-                      type="text"
-                      name="CPU"
-                      class="form-control form-control-sm"
-                      placeholder="VD: Intel Core i7 1360P"
-                    />
-                  </div>
-                  <div class="col-md-6 mb-2">
-                    <label class="small text-muted">RAM</label>
-                    <input
-                      type="text"
-                      name="RAM"
-                      class="form-control form-control-sm"
-                      placeholder="VD: 16GB DDR5"
-                    />
-                  </div>
-                  <div class="col-md-6 mb-2">
-                    <label class="small text-muted">Ổ cứng (ROM)</label>
-                    <input
-                      type="text"
-                      name="ROM"
-                      class="form-control form-control-sm"
-                      placeholder="VD: 512GB SSD"
-                    />
-                  </div>
-                  <div class="col-md-6 mb-2">
-                    <label class="small text-muted">VGA (Card đồ họa)</label>
-                    <input
-                      type="text"
-                      name="VGA"
-                      class="form-control form-control-sm"
-                      placeholder="VD: Nvidia RTX 4050"
-                    />
-                  </div>
-                  <div class="col-md-6 mb-2">
-                    <label class="small text-muted">Màn hình</label>
-                    <input
-                      type="text"
-                      name="MANHINH"
-                      class="form-control form-control-sm"
-                      placeholder="VD: 14 inch OLED"
-                    />
-                  </div>
-                  <div class="col-md-6 mb-2">
-                    <label class="small text-muted">Thông tin khác</label>
-                    <input
-                      type="text"
-                      name="KHAC"
-                      class="form-control form-control-sm"
-                      placeholder="VD: Vỏ nhôm, Pin 4 cell..."
-                    />
-                  </div>
-                </div>
-
-                <h6 class="text-primary fw-bold border-bottom pb-2 mb-3 mt-4">
-                  3. Hình ảnh (Bảng DANHSACHANH)
-                </h6>
-                <div class="mb-3">
-                  <input
-                    type="file"
-                    name="fileAnh"
-                    class="form-control"
-                    accept="image/*"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  class="btn btn-primary w-100 fw-bold py-2"
-                >
-                  <span class="fs-5">💾 Lưu Sản Phẩm</span>
-                </button>
-              </form>
-            </div>
-          </div>
+  <div class="row">
+    <div class="col-xl-7">
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white fw-bold">
+          <i class="bi bi-keyboard"></i> Nhập Sản Phẩm Mới (Thủ công)
         </div>
-
-        <div class="col-xl-5">
-          <div class="card mb-4 shadow-sm border-success">
-            <div class="card-header bg-success text-white fw-bold">
-              <i class="bi bi-filetype-csv"></i> Nhập Hàng Loạt (File CSV)
-            </div>
-            <div class="card-body">
-              <p class="text-muted small">
-                Hỗ trợ nhập nhanh dữ liệu. Vui lòng chuẩn bị file Excel và lưu
-                dưới dạng <strong>.CSV (UTF-8)</strong>.
-              </p>
-              <div
-                class="alert alert-secondary p-2 font-monospace"
-                style="font-size: 11px"
-              >
-                <strong>Cấu trúc cột (11 cột):</strong><br />
-                TenSP, Gia, SoLuong, DonVi, RAM, CPU, ROM, ManHinh, VGA, Khac,
-                TenAnh
-                <hr class="my-1" />
-                <strong>Ví dụ:</strong><br />
-                Laptop Dell,20000000,10,Cai,8GB,Core i5,256GB,14 inch,Onboard,Vo
-                nhua,dell.jpg
+        <div class="card-body">
+          <form
+                  th:action="@{/admin/nhap-thu-cong}"
+                  method="post"
+                  enctype="multipart/form-data"
+          >
+            <h6 class="text-primary fw-bold border-bottom pb-2 mb-3">
+              1. Thông tin cơ bản (Bảng SANPHAM)
+            </h6>
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <label class="form-label fw-bold small">Tên sản phẩm</label>
+                <input
+                        type="text"
+                        name="tenSP"
+                        class="form-control"
+                        required
+                        placeholder="VD: Laptop Dell XPS 13"
+                />
               </div>
+              <div class="col-md-4">
+                <label class="form-label fw-bold small">Đơn vị tính</label>
+                <input
+                        type="text"
+                        name="donVT"
+                        class="form-control"
+                        placeholder="Cái/Bộ"
+                />
+              </div>
+            </div>
 
-              <form
-                th:action="@{/admin/nhap-file}"
-                method="post"
-                enctype="multipart/form-data"
-              >
-                <div class="mb-3">
-                  <label class="form-label fw-bold">Chọn file .csv</label>
-                  <input
-                    type="file"
-                    name="fileCSV"
-                    class="form-control"
-                    accept=".csv"
-                    required
-                  />
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-bold small"
+                >Giá bán (VNĐ)</label
+                >
+                <input
+                        type="number"
+                        name="donGiaSP"
+                        class="form-control"
+                        required
+                />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold small">Số lượng tồn</label>
+                <input
+                        type="number"
+                        name="soLuongTon"
+                        class="form-control"
+                        required
+                />
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-4">
+                <label class="form-label fw-bold small">Loại SP</label>
+                <select name="maLoai" class="form-select" required>
+                  <option value="">-- Chọn Loại SP --</option>
+                  <option
+                          th:each="loai : ${dsLoai}"
+                          th:value="${loai.maLoai}"
+                          th:text="${loai.tenLoai}"
+                  ></option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-bold small">Nhà Sản Xuất</label>
+                <select name="maNSX" class="form-select" required>
+                  <option value="">-- Chọn Nhà SX --</option>
+                  <option
+                          th:each="nsx : ${dsNSX}"
+                          th:value="${nsx.maNSX}"
+                          th:text="${nsx.tenNSX}"
+                  ></option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-bold small">Nhà Cung Cấp</label>
+                <select name="maNCC" id="selectNCC" class="form-select" required>
+                  <option value="">-- Chọn Nhà CC --</option>
+                  <option
+                          th:each="ncc : ${dsNCC}"
+                          th:value="${ncc.maNCC}"
+                          th:text="${ncc.tenNCC}"
+                  ></option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Ô checkbox tích chọn Nhà Cung Cấp mới -->
+            <div class="mb-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="isNewNCC" name="isNewNCC" value="true" onchange="toggleNewNCCFields()">
+                <label class="form-check-label fw-bold text-success" for="isNewNCC">➕ Thêm Nhà Cung Cấp Mới</label>
+              </div>
+            </div>
+
+            <!-- Form nhập thông tin Nhà Cung Cấp mới (Ẩn mặc định) -->
+            <div id="newNCCFields" class="p-3 mb-3 border border-success rounded bg-light" style="display: none;">
+              <h6 class="text-success fw-bold border-bottom pb-1 mb-2">Thông tin Nhà Cung Cấp mới</h6>
+              <div class="row">
+                <div class="col-md-4 mb-2">
+                  <label class="small fw-bold">Tên nhà cung cấp <span class="text-danger">*</span></label>
+                  <input type="text" id="tenNCCMoi" name="tenNCCMoi" class="form-control form-control-sm" placeholder="VD: Công ty TNHH ABC">
                 </div>
-                <button type="submit" class="btn btn-success w-100 fw-bold">
-                  📤 Tải Lên & Nhập Kho
-                </button>
-              </form>
+                <div class="col-md-4 mb-2">
+                  <label class="small fw-bold">Số điện thoại</label>
+                  <input type="text" name="sdtNCCMoi" class="form-control form-control-sm" placeholder="VD: 0987654321">
+                </div>
+                <div class="col-md-4 mb-2">
+                  <label class="small fw-bold">Địa chỉ</label>
+                  <input type="text" name="diaChiNCCMoi" class="form-control form-control-sm" placeholder="VD: 123 Đường 3/2, Q.10">
+                </div>
+              </div>
             </div>
-            <div class="card-footer bg-transparent small text-muted">
-              * Lưu ý: Dữ liệu được đọc trực tiếp từ file CSV và cập nhật tự
-              động vào database.
+
+            <h6 class="text-primary fw-bold border-bottom pb-2 mb-3 mt-4">
+              2. Cấu hình chi tiết (Bảng MOTA)
+            </h6>
+            <div class="row mb-2">
+              <div class="col-md-6 mb-2">
+                <label class="small text-muted">CPU (Vi xử lý)</label>
+                <input
+                        type="text"
+                        name="cpu"
+                        class="form-control form-control-sm"
+                        placeholder="VD: Intel Core i7 1360P"
+                />
+              </div>
+              <div class="col-md-6 mb-2">
+                <label class="small text-muted">RAM</label>
+                <input
+                        type="text"
+                        name="ram"
+                        class="form-control form-control-sm"
+                        placeholder="VD: 16GB DDR5"
+                />
+              </div>
+              <div class="col-md-6 mb-2">
+                <label class="small text-muted">Ổ cứng (ROM)</label>
+                <input
+                        type="text"
+                        name="rom"
+                        class="form-control form-control-sm"
+                        placeholder="VD: 512GB SSD"
+                />
+              </div>
+              <div class="col-md-6 mb-2">
+                <label class="small text-muted">VGA (Card đồ họa)</label>
+                <input
+                        type="text"
+                        name="vga"
+                        class="form-control form-control-sm"
+                        placeholder="VD: Nvidia RTX 4050"
+                />
+              </div>
+              <div class="col-md-6 mb-2">
+                <label class="small text-muted">Màn hình</label>
+                <input
+                        type="text"
+                        name="manHinh"
+                        class="form-control form-control-sm"
+                        placeholder="VD: 14 inch OLED"
+                />
+              </div>
+              <div class="col-md-6 mb-2">
+                <label class="small text-muted">Thông tin khác</label>
+                <input
+                        type="text"
+                        name="khac"
+                        class="form-control form-control-sm"
+                        placeholder="VD: Vỏ nhôm, Pin 4 cell..."
+                />
+              </div>
             </div>
-          </div>
+
+            <h6 class="text-primary fw-bold border-bottom pb-2 mb-3 mt-4">
+              3. Hình ảnh (Bảng DANHSACHANH)
+            </h6>
+            <div class="mb-3">
+              <input
+                      type="file"
+                      name="fileAnh"
+                      class="form-control"
+                      accept="image/*"
+              />
+            </div>
+
+            <button
+                    type="submit"
+                    class="btn btn-primary w-100 fw-bold py-2"
+            >
+              <span class="fs-5">💾 Lưu Sản Phẩm</span>
+            </button>
+          </form>
         </div>
       </div>
     </div>
-  </body>
+
+    <div class="col-xl-5">
+      <div class="card mb-4 shadow-sm border-success">
+        <div class="card-header bg-success text-white fw-bold">
+          <i class="bi bi-filetype-csv"></i> Nhập Hàng Loạt (File CSV)
+        </div>
+        <div class="card-body">
+          <p class="text-muted small">
+            Hỗ trợ nhập nhanh dữ liệu. Vui lòng chuẩn bị file Excel và lưu
+            dưới dạng <strong>.CSV (UTF-8)</strong>.
+          </p>
+          <div
+                  class="alert alert-secondary p-2 font-monospace"
+                  style="font-size: 11px"
+          >
+            <strong>Cấu trúc cột (11 cột):</strong><br />
+            TenSP, Gia, SoLuong, DonVi, RAM, CPU, ROM, ManHinh, VGA, Khac,
+            TenAnh
+            <hr class="my-1" />
+            <strong>Ví dụ:</strong><br />
+            Laptop Dell,20000000,10,Cai,8GB,Core i5,256GB,14 inch,Onboard,Vo
+            nhua,dell.jpg
+          </div>
+
+          <form
+                  th:action="@{/admin/nhap-file}"
+                  method="post"
+                  enctype="multipart/form-data"
+          >
+            <div class="mb-3">
+              <label class="form-label fw-bold">Chọn file .csv</label>
+              <input
+                      type="file"
+                      name="fileCSV"
+                      class="form-control"
+                      accept=".csv"
+                      required
+              />
+            </div>
+            <button type="submit" class="btn btn-success w-100 fw-bold">
+              📤 Tải Lên & Nhập Kho
+            </button>
+          </form>
+        </div>
+        <div class="card-footer bg-transparent small text-muted">
+          * Lưu ý: Dữ liệu được đọc trực tiếp từ file CSV và cập nhật tự
+          động vào database.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔥 DI CHUYỂN TOÀN BỘ SCRIPT VÀO TRONG CONTAINER-FLUID ĐỂ TRÁNH BỊ THYMELEAF BỎ QUA -->
+  <script>
+    function toggleNewNCCFields() {
+      const checkbox = document.getElementById("isNewNCC");
+      const newFieldsDiv = document.getElementById("newNCCFields");
+      const selectNCC = document.getElementById("selectNCC");
+      const tenNCCMoi = document.getElementById("tenNCCMoi");
+
+      if (checkbox.checked) {
+        // Hiện khối điền NCC mới
+        newFieldsDiv.style.display = "block";
+        tenNCCMoi.required = true;
+
+        // Vô hiệu hóa và bỏ thuộc tính bắt buộc của dropdown NCC cũ
+        selectNCC.disabled = true;
+        selectNCC.required = false;
+      } else {
+        // Ẩn khối điền NCC mới
+        newFieldsDiv.style.display = "none";
+        tenNCCMoi.required = false;
+        tenNCCMoi.value = "";
+
+        // Kích hoạt lại dropdown NCC cũ
+        selectNCC.disabled = false;
+        selectNCC.required = true;
+      }
+    }
+  </script>
+</div> <!-- Thẻ đóng của container-fluid -->
+</body>
 </html>

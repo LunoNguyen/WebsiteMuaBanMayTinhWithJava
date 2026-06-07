@@ -1,0 +1,145 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutAdmin :: layout(~{::div.container-fluid})}"
+>
+  <body>
+    <div class="container-fluid px-4">
+      <h1 class="mt-4">Thêm Tài Khoản Mới</h1>
+      <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item">
+          <a th:href="@{/admin/trang-admin}">Tổng quan</a>
+        </li>
+        <li class="breadcrumb-item">
+          <a th:href="@{/admin/ql-taikhoan}">Quản lý Tài khoản</a>
+        </li>
+        <li class="breadcrumb-item active">Thêm mới</li>
+      </ol>
+
+      <div class="card mb-4 shadow-sm" style="max-width: 800px; margin: auto">
+        <div class="card-header bg-success text-white fw-bold">
+          <i class="fas fa-user-plus me-1"></i> Khởi tạo tài khoản
+        </div>
+        <div class="card-body">
+          <form
+            th:action="@{/admin/tao-tk}"
+            method="post"
+            th:object="${taiKhoan}"
+          >
+            <div class="row mb-3">
+              <label class="col-sm-3 col-form-label fw-bold"
+                >Tên đăng nhập (ID) <span class="text-danger">*</span></label
+              >
+              <div class="col-sm-9">
+                <input
+                  type="text"
+                  th:field="*{maTK}"
+                  class="form-control"
+                  placeholder="Nhập tên tài khoản (VD: admin_01, kh_nguyenvana)"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <label class="col-sm-3 col-form-label fw-bold"
+                >Email <span class="text-danger">*</span></label
+              >
+              <div class="col-sm-9">
+                <input
+                  type="email"
+                  th:field="*{emailTK}"
+                  class="form-control"
+                  placeholder="example@gmail.com"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <label class="col-sm-3 col-form-label fw-bold"
+                >Mật khẩu <span class="text-danger">*</span></label
+              >
+              <div class="col-sm-9">
+                <input
+                  type="password"
+                  th:field="*{matKhau}"
+                  class="form-control"
+                  placeholder="Nhập mật khẩu..."
+                  required
+                />
+                <small class="text-muted fst-italic"
+                  >Hệ thống sẽ tự động mã hóa MD5 mật khẩu này trước khi lưu vào
+                  Database.</small
+                >
+              </div>
+            </div>
+
+            <hr class="my-4" />
+
+            <div class="row mb-3">
+              <label class="col-sm-3 col-form-label fw-bold"
+                >Phân quyền <span class="text-danger">*</span></label
+              >
+              <div class="col-sm-9">
+                <select th:field="*{loaiTaiKhoan}" class="form-select" required>
+                  <option value="">-- Chọn loại tài khoản --</option>
+                  <option value="KhachHang">Khách Hàng</option>
+                  <option value="NhanVien">Nhân Viên</option>
+                  <option value="Admin">Quản Trị Viên (Admin)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <label class="col-sm-3 col-form-label fw-bold"
+                >Liên kết Nhân Viên</label
+              >
+              <div class="col-sm-9">
+                <select th:field="*{maNV}" class="form-select">
+                  <option value="">
+                    -- Bỏ trống nếu không phải là nhân viên --
+                  </option>
+                  <option
+                    th:each="nv : ${dsNhanVien}"
+                    th:value="${nv.maNV}"
+                    th:text="${nv.maNV + ' - ' + nv.tenNV}"
+                  ></option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <label class="col-sm-3 col-form-label fw-bold"
+                >Liên kết Khách Hàng</label
+              >
+              <div class="col-sm-9">
+                <select th:field="*{maKH}" class="form-select">
+                  <option value="">
+                    -- Bỏ trống nếu không phải là khách hàng --
+                  </option>
+                  <option
+                    th:each="kh : ${dsKhachHang}"
+                    th:value="${kh.maKH}"
+                    th:text="${kh.maKH + ' - ' + kh.tenKH}"
+                  ></option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row mt-4">
+              <div class="col-sm-9 offset-sm-3">
+                <button type="submit" class="btn btn-success fw-bold me-2">
+                  <i class="fas fa-check me-1"></i> Tạo Tài Khoản
+                </button>
+                <a th:href="@{/admin/ql-taikhoan}" class="btn btn-secondary"
+                  >Hủy bỏ</a
+                >
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

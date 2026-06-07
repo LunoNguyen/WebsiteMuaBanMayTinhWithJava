@@ -327,19 +327,21 @@ public class AdminController {
     // ==========================================
     // THÊM TÀI KHOẢN MỚI
     // ==========================================
-    @GetMapping("/create-tk")
+    @GetMapping("/tao-tk")
     public String createTaiKhoanView(Model model) {
         model.addAttribute("taiKhoan", new TaiKhoan());
         
         // Đẩy danh sách Nhân viên và Khách hàng ra form để chọn Dropdown
         model.addAttribute("dsNhanVien", nhanVienRepository.findAll());
         model.addAttribute("dsKhachHang", khachHangRepository.findAll());
-        return "Admin/Create_TK"; 
+        return "admin/Create_TK"; 
     }
 
-    @PostMapping("/create-tk")
+    @PostMapping("/tao-tk")
     public String createTaiKhoanPost(@ModelAttribute TaiKhoan taiKhoan, RedirectAttributes redirectAttributes) {
         try {
+            if (taiKhoan.getMaNV() != null && taiKhoan.getMaNV().isEmpty()) taiKhoan.setMaNV(null);
+            if (taiKhoan.getMaKH() != null && taiKhoan.getMaKH().isEmpty()) taiKhoan.setMaKH(null);
             // Quan trọng: Mã hóa MD5 mật khẩu (có getBytes() để tránh lỗi) trước khi lưu
             if (taiKhoan.getMatKhau() != null && !taiKhoan.getMatKhau().isEmpty()) {
                 String hashedPass = org.springframework.util.DigestUtils.md5DigestAsHex(taiKhoan.getMatKhau().getBytes()).toUpperCase();
@@ -357,7 +359,7 @@ public class AdminController {
     // ==========================================
     // CHỈNH SỬA TÀI KHOẢN
     // ==========================================
-    @GetMapping("/edit-tk/{id}")
+    @GetMapping("/sua-taikhoan/{id}")
     public String editTaiKhoanView(@PathVariable("id") String id, Model model, RedirectAttributes redirectAttributes) {
         TaiKhoan tk = taiKhoanRepository.findById(id).orElse(null);
         if (tk == null) {
@@ -368,21 +370,24 @@ public class AdminController {
         model.addAttribute("taiKhoan", tk);
         model.addAttribute("dsNhanVien", nhanVienRepository.findAll());
         model.addAttribute("dsKhachHang", khachHangRepository.findAll());
-        return "Admin/Edit_TK";
+        return "admin/Edit_TK";
     }
 
-    @PostMapping("/edit-tk")
+    @PostMapping("/sua-tk")
     public String editTaiKhoanPost(@ModelAttribute TaiKhoan tkMoi, RedirectAttributes redirectAttributes) {
         try {
             TaiKhoan tkCu = taiKhoanRepository.findById(tkMoi.getMaTK()).orElse(null);
             if(tkCu != null) {
-                // Cập nhật thông tin phân quyền
                 tkCu.setEmailTK(tkMoi.getEmailTK());
                 tkCu.setLoaiTaiKhoan(tkMoi.getLoaiTaiKhoan());
-                tkCu.setMaNV(tkMoi.getMaNV());
-                tkCu.setMaKH(tkMoi.getMaKH());
                 
-                // Chỉ mã hóa và cập nhật mật khẩu nếu Admin có nhập mật khẩu mới vào Form
+                // [CẬP NHẬT]: Ép cứng thành null nếu là chuỗi rỗng hoặc khoảng trắng
+                String maNV = tkMoi.getMaNV();
+                tkCu.setMaNV((maNV == null || maNV.trim().isEmpty()) ? null : maNV.trim());
+                
+                String maKH = tkMoi.getMaKH();
+                tkCu.setMaKH((maKH == null || maKH.trim().isEmpty()) ? null : maKH.trim());
+                
                 if (tkMoi.getMatKhau() != null && !tkMoi.getMatKhau().trim().isEmpty()) {
                     String hashedPass = org.springframework.util.DigestUtils.md5DigestAsHex(tkMoi.getMatKhau().getBytes()).toUpperCase();
                     tkCu.setMatKhau(hashedPass);
@@ -393,6 +398,25 @@ public class AdminController {
             }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("Error", "Lỗi cập nhật: " + e.getMessage());
+        }
+        return "redirect:/admin/ql-taikhoan";
+    }
+    // ==========================================
+    // ĐỔI NHANH PHÂN QUYỀN TÀI KHOẢN TRÊN BẢNG
+    // ==========================================
+    @PostMapping("/doi-loai-taikhoan")
+    public String doiLoaiTaiKhoan(@RequestParam("matk") String matk, 
+                                  @RequestParam("loaiMoi") String loaiMoi, 
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            TaiKhoan tk = taiKhoanRepository.findById(matk).orElse(null);
+            if (tk != null) {
+                tk.setLoaiTaiKhoan(loaiMoi);
+                taiKhoanRepository.save(tk);
+                redirectAttributes.addFlashAttribute("Success", "Đã thay đổi phân quyền tài khoản thành công!");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("Error", "Lỗi đổi quyền: " + e.getMessage());
         }
         return "redirect:/admin/ql-taikhoan";
     }
@@ -417,7 +441,7 @@ public class AdminController {
         model.addAttribute("sanPham", new SanPham());
         model.addAttribute("moTa", new MoTa());
         model.addAttribute("MaSPSapTao", adminService.generateMaSP());
-        return "Admin/NhapHang";
+        return "admin/NhapHang";
     }
 
     // CÁCH 1: XỬ LÝ NHẬP THỦ CÔNG

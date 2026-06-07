@@ -35,6 +35,7 @@ import com.nhom8.DoAnJava.model.HoaDon;
 import com.nhom8.DoAnJava.repository.DanhSachAnhRepository;
 import com.nhom8.DoAnJava.repository.CapNhatGiaRepository;
 import com.nhom8.DoAnJava.repository.ChiTietHoaDonRepository;
+import com.nhom8.DoAnJava.repository.ChucVuRepository;
 import com.nhom8.DoAnJava.repository.HoaDonRepository;
 import com.nhom8.DoAnJava.repository.KhachHangRepository;
 import com.nhom8.DoAnJava.repository.LoaiSanPhamRepository;
@@ -63,6 +64,7 @@ public class AdminController {
     @Autowired private CapNhatGiaRepository capNhatGiaRepository;
     @Autowired private DanhSachAnhRepository danhSachAnhRepository;
     @Autowired private ChiTietHoaDonRepository chiTietHoaDonRepository;
+    @Autowired private ChucVuRepository chucVuRepository;
 
     // 1. TRANG DASHBOARD ADMIN MAIN
     @GetMapping("/trang-admin")
@@ -382,13 +384,16 @@ public class AdminController {
     @GetMapping("/create-nv")
     public String createNhanVienView(Model model) {
         model.addAttribute("nhanVien", new NhanVien());
-        return "Admin/Create_NV"; 
+        
+        // Đẩy danh sách chức vụ ra giao diện
+        model.addAttribute("dsChucVu", chucVuRepository.findAll()); 
+        
+        return "admin/Create_NV"; 
     }
-
     @PostMapping("/create-nv")
     public String createNhanVienPost(@ModelAttribute NhanVien nhanVien, RedirectAttributes redirectAttributes) {
         try {
-            // Lưu dữ liệu trực tiếp vào database sẵn có
+            // Lưu nhân viên mới vào Database
             nhanVienRepository.save(nhanVien);
             redirectAttributes.addFlashAttribute("Success", "Thêm nhân viên thành công!");
         } catch (Exception e) {
@@ -400,9 +405,9 @@ public class AdminController {
     // ==========================================
     // CHỈNH SỬA THÔNG TIN NHÂN VIÊN
     // ==========================================
+    
     @GetMapping("/edit-nv/{id}")
     public String editNhanVienView(@PathVariable("id") String id, Model model, RedirectAttributes redirectAttributes) {
-        // Truy xuất dữ liệu nhân viên từ database sẵn có
         NhanVien nv = nhanVienRepository.findById(id).orElse(null);
         if (nv == null) {
             redirectAttributes.addFlashAttribute("Error", "Không tìm thấy nhân viên!");
@@ -410,31 +415,34 @@ public class AdminController {
         }
         
         model.addAttribute("nhanVien", nv);
-        return "Admin/Edit_NV";
+        
+        // Đẩy danh sách chức vụ ra giao diện
+        model.addAttribute("dsChucVu", chucVuRepository.findAll());
+        
+        return "admin/Edit_NV";
     }
-
     @PostMapping("/edit-nv")
     public String editNhanVienPost(@ModelAttribute NhanVien nvMoi, RedirectAttributes redirectAttributes) {
         try {
             NhanVien nvCu = nhanVienRepository.findById(nvMoi.getMaNV()).orElse(null);
             if(nvCu != null) {
-                // Cập nhật các trường thông tin từ Form gửi lên
+                // Lấy dữ liệu từ form và cập nhật vào database sẵn có
                 nvCu.setTenNV(nvMoi.getTenNV());
                 nvCu.setSdtNV(nvMoi.getSdtNV());
                 nvCu.setDiaChiNV(nvMoi.getDiaChiNV());
                 nvCu.setEmailNV(nvMoi.getEmailNV());
-                // (Bạn có thể bổ sung thêm nvCu.setChucVu(...) nếu bảng NhanVien có trường này)
+                nvCu.setMaCV(nvMoi.getMaCV()); 
                 
-                // Lưu lại thông tin cập nhật xuống DB
                 nhanVienRepository.save(nvCu);
                 redirectAttributes.addFlashAttribute("Success", "Cập nhật nhân viên thành công!");
+            } else {
+                redirectAttributes.addFlashAttribute("Error", "Lỗi: Không tìm thấy nhân viên trong Database!");
             }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("Error", "Lỗi cập nhật: " + e.getMessage());
         }
         return "redirect:/admin/ql-nhanvien";
     }
-
     // ==========================================
     // XÓA NHÂN VIÊN (BẮT LỖI KHÓA NGOẠI)
     // ==========================================
@@ -453,19 +461,21 @@ public class AdminController {
     // ==========================================
     // THÊM TÀI KHOẢN MỚI
     // ==========================================
-    @GetMapping("/create-tk")
+    @GetMapping("/tao-tk")
     public String createTaiKhoanView(Model model) {
         model.addAttribute("taiKhoan", new TaiKhoan());
         
         // Đẩy danh sách Nhân viên và Khách hàng ra form để chọn Dropdown
         model.addAttribute("dsNhanVien", nhanVienRepository.findAll());
         model.addAttribute("dsKhachHang", khachHangRepository.findAll());
-        return "Admin/Create_TK"; 
+        return "admin/Create_TK"; 
     }
 
-    @PostMapping("/create-tk")
+    @PostMapping("/tao-tk")
     public String createTaiKhoanPost(@ModelAttribute TaiKhoan taiKhoan, RedirectAttributes redirectAttributes) {
         try {
+            if (taiKhoan.getMaNV() != null && taiKhoan.getMaNV().isEmpty()) taiKhoan.setMaNV(null);
+            if (taiKhoan.getMaKH() != null && taiKhoan.getMaKH().isEmpty()) taiKhoan.setMaKH(null);
             // Quan trọng: Mã hóa MD5 mật khẩu (có getBytes() để tránh lỗi) trước khi lưu
             if (taiKhoan.getMatKhau() != null && !taiKhoan.getMatKhau().isEmpty()) {
                 String hashedPass = org.springframework.util.DigestUtils.md5DigestAsHex(taiKhoan.getMatKhau().getBytes()).toUpperCase();
@@ -483,7 +493,7 @@ public class AdminController {
     // ==========================================
     // CHỈNH SỬA TÀI KHOẢN
     // ==========================================
-    @GetMapping("/edit-tk/{id}")
+    @GetMapping("/sua-taikhoan/{id}")
     public String editTaiKhoanView(@PathVariable("id") String id, Model model, RedirectAttributes redirectAttributes) {
         TaiKhoan tk = taiKhoanRepository.findById(id).orElse(null);
         if (tk == null) {
@@ -494,21 +504,24 @@ public class AdminController {
         model.addAttribute("taiKhoan", tk);
         model.addAttribute("dsNhanVien", nhanVienRepository.findAll());
         model.addAttribute("dsKhachHang", khachHangRepository.findAll());
-        return "Admin/Edit_TK";
+        return "admin/Edit_TK";
     }
 
-    @PostMapping("/edit-tk")
+    @PostMapping("/sua-tk")
     public String editTaiKhoanPost(@ModelAttribute TaiKhoan tkMoi, RedirectAttributes redirectAttributes) {
         try {
             TaiKhoan tkCu = taiKhoanRepository.findById(tkMoi.getMaTK()).orElse(null);
             if(tkCu != null) {
-                // Cập nhật thông tin phân quyền
                 tkCu.setEmailTK(tkMoi.getEmailTK());
                 tkCu.setLoaiTaiKhoan(tkMoi.getLoaiTaiKhoan());
-                tkCu.setMaNV(tkMoi.getMaNV());
-                tkCu.setMaKH(tkMoi.getMaKH());
                 
-                // Chỉ mã hóa và cập nhật mật khẩu nếu Admin có nhập mật khẩu mới vào Form
+                // [CẬP NHẬT]: Ép cứng thành null nếu là chuỗi rỗng hoặc khoảng trắng
+                String maNV = tkMoi.getMaNV();
+                tkCu.setMaNV((maNV == null || maNV.trim().isEmpty()) ? null : maNV.trim());
+                
+                String maKH = tkMoi.getMaKH();
+                tkCu.setMaKH((maKH == null || maKH.trim().isEmpty()) ? null : maKH.trim());
+                
                 if (tkMoi.getMatKhau() != null && !tkMoi.getMatKhau().trim().isEmpty()) {
                     String hashedPass = org.springframework.util.DigestUtils.md5DigestAsHex(tkMoi.getMatKhau().getBytes()).toUpperCase();
                     tkCu.setMatKhau(hashedPass);
@@ -519,6 +532,25 @@ public class AdminController {
             }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("Error", "Lỗi cập nhật: " + e.getMessage());
+        }
+        return "redirect:/admin/ql-taikhoan";
+    }
+    // ==========================================
+    // ĐỔI NHANH PHÂN QUYỀN TÀI KHOẢN TRÊN BẢNG
+    // ==========================================
+    @PostMapping("/doi-loai-taikhoan")
+    public String doiLoaiTaiKhoan(@RequestParam("matk") String matk, 
+                                  @RequestParam("loaiMoi") String loaiMoi, 
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            TaiKhoan tk = taiKhoanRepository.findById(matk).orElse(null);
+            if (tk != null) {
+                tk.setLoaiTaiKhoan(loaiMoi);
+                taiKhoanRepository.save(tk);
+                redirectAttributes.addFlashAttribute("Success", "Đã thay đổi phân quyền tài khoản thành công!");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("Error", "Lỗi đổi quyền: " + e.getMessage());
         }
         return "redirect:/admin/ql-taikhoan";
     }
@@ -543,7 +575,7 @@ public class AdminController {
         model.addAttribute("sanPham", new SanPham());
         model.addAttribute("moTa", new MoTa());
         model.addAttribute("MaSPSapTao", adminService.generateMaSP());
-        return "Admin/NhapHang";
+        return "admin/NhapHang";
     }
 
     // CÁCH 1: XỬ LÝ NHẬP THỦ CÔNG

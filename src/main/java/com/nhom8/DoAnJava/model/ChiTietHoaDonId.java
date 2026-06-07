@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 public class ChiTietHoaDonId implements Serializable {
-    
+
     private String maSP;
     private String maHD;
 
@@ -37,8 +37,10 @@ public class ChiTietHoaDonId implements Serializable {
     // Bắt buộc override equals() và hashCode() để JPA có thể so sánh các ID
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         ChiTietHoaDonId that = (ChiTietHoaDonId) o;
         return Objects.equals(maSP, that.maSP) && Objects.equals(maHD, that.maHD);
     }

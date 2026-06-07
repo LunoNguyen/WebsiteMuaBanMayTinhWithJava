@@ -1,0 +1,319 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutAdmin :: layout(~{::div.container-fluid})}"
+>
+  <body>
+    <div class="container-fluid px-4 order-detail-page">
+      <style>
+        .order-detail-page {
+          color: #1f2937;
+        }
+
+        .order-hero {
+          background: linear-gradient(135deg, #111827 0%, #1d4ed8 55%, #0f766e 100%);
+          border-radius: 8px;
+          color: #fff;
+          padding: 24px;
+          margin: 24px 0;
+          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+        }
+
+        .order-hero .muted {
+          color: rgba(255, 255, 255, 0.74);
+        }
+
+        .status-pill {
+          border-radius: 999px;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 14px;
+          font-weight: 700;
+          background: rgba(255, 255, 255, 0.16);
+          border: 1px solid rgba(255, 255, 255, 0.28);
+        }
+
+        .info-panel {
+          background: #fff;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+          height: 100%;
+        }
+
+        .info-panel-header {
+          border-bottom: 1px solid #e5e7eb;
+          font-weight: 700;
+          padding: 14px 18px;
+        }
+
+        .info-panel-body {
+          padding: 18px;
+        }
+
+        .info-row {
+          display: flex;
+          justify-content: space-between;
+          gap: 16px;
+          padding: 8px 0;
+          border-bottom: 1px dashed #e5e7eb;
+        }
+
+        .info-row:last-child {
+          border-bottom: 0;
+        }
+
+        .info-label {
+          color: #6b7280;
+          min-width: 120px;
+        }
+
+        .info-value {
+          font-weight: 600;
+          text-align: right;
+        }
+
+        .status-form {
+          display: grid;
+          grid-template-columns: minmax(180px, 1fr) auto;
+          gap: 10px;
+        }
+
+        .product-table th {
+          white-space: nowrap;
+        }
+
+        .product-name {
+          min-width: 260px;
+        }
+
+        @media (max-width: 768px) {
+          .order-hero {
+            padding: 18px;
+          }
+
+          .status-form {
+            grid-template-columns: 1fr;
+          }
+
+          .info-row {
+            display: block;
+          }
+
+          .info-value {
+            display: block;
+            text-align: left;
+            margin-top: 2px;
+          }
+        }
+      </style>
+
+      <div class="order-hero">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+          <div>
+            <div class="muted fw-semibold mb-1">Chi tiết đơn hàng</div>
+            <h1 class="mb-2" th:text="'Đơn hàng #' + ${donHang.maHD}"></h1>
+            <div class="muted">
+              Ngày lập:
+              <span
+                th:text="${donHang.ngayLap != null ? #temporals.format(donHang.ngayLap, 'dd/MM/yyyy HH:mm') : 'Chưa có'}"
+              ></span>
+            </div>
+          </div>
+          <div class="text-md-end">
+            <div class="status-pill mb-3">
+              <i class="fas fa-circle-info"></i>
+              <span th:text="${donHang.trangThaiTT}"></span>
+            </div>
+            <div>
+              <a th:href="@{/admin/ql-donhang}" class="btn btn-light btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Quay lại danh sách
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div th:if="${Success}" class="alert alert-success" th:text="${Success}"></div>
+      <div th:if="${Error}" class="alert alert-danger" th:text="${Error}"></div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-xl-4 col-lg-6">
+          <div class="info-panel">
+            <div class="info-panel-header">
+              <i class="fas fa-sliders me-2 text-primary"></i>Xử lý trạng thái
+            </div>
+            <div class="info-panel-body">
+              <form
+                th:action="@{/admin/capnhat-trangthai}"
+                method="post"
+                class="status-form"
+              >
+                <input type="hidden" name="maDonHang" th:value="${donHang.maHD}" />
+                <input type="hidden" name="returnToDetail" value="true" />
+                <select name="newStatus" class="form-select fw-bold">
+                  <option
+                    th:each="st : ${ {'Đã đặt', 'Đang giao', 'Đã thanh toán', 'Đã hủy'} }"
+                    th:value="${st}"
+                    th:text="${st}"
+                    th:selected="${donHang.trangThaiTT == st}"
+                  ></option>
+                </select>
+                <button type="submit" class="btn btn-warning fw-bold">
+                  <i class="fas fa-save me-1"></i>Lưu
+                </button>
+              </form>
+              <div class="small text-muted mt-3">
+                Khi nhân viên lưu trạng thái lần đầu, hệ thống sẽ ghi nhận nhân viên đó phụ trách đơn này.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-4 col-lg-6">
+          <div class="info-panel">
+            <div class="info-panel-header">
+              <i class="fas fa-user me-2 text-primary"></i>Thông tin khách hàng
+            </div>
+            <div class="info-panel-body">
+              <div class="info-row">
+                <span class="info-label">Tên khách</span>
+                <span
+                  class="info-value"
+                  th:text="${donHang.khachHang != null ? donHang.khachHang.tenKH : 'Khách vãng lai'}"
+                ></span>
+              </div>
+              <div class="info-row" th:if="${donHang.khachHang != null}">
+                <span class="info-label">Mã khách</span>
+                <span class="info-value" th:text="${donHang.khachHang.maKH}"></span>
+              </div>
+              <div class="info-row" th:if="${donHang.khachHang != null}">
+                <span class="info-label">Số điện thoại</span>
+                <span class="info-value" th:text="${donHang.khachHang.sdtKH}"></span>
+              </div>
+              <div class="info-row" th:if="${donHang.khachHang != null}">
+                <span class="info-label">Email</span>
+                <span class="info-value" th:text="${donHang.khachHang.emailKH}"></span>
+              </div>
+              <div class="info-row" th:if="${donHang.khachHang != null}">
+                <span class="info-label">Địa chỉ</span>
+                <span class="info-value" th:text="${donHang.khachHang.diaChiKH}"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-4">
+          <div class="info-panel">
+            <div class="info-panel-header">
+              <i class="fas fa-user-tie me-2 text-primary"></i>Nhân viên phụ trách
+            </div>
+            <div class="info-panel-body">
+              <th:block th:if="${donHang.nhanVien != null}">
+                <div class="info-row">
+                  <span class="info-label">Mã nhân viên</span>
+                  <span class="info-value" th:text="${donHang.nhanVien.maNV}"></span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Họ tên</span>
+                  <span class="info-value" th:text="${donHang.nhanVien.tenNV}"></span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Chức vụ</span>
+                  <span class="info-value" th:text="${donHang.nhanVien.maCV}"></span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Số điện thoại</span>
+                  <span class="info-value" th:text="${donHang.nhanVien.sdtNV}"></span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Email</span>
+                  <span class="info-value" th:text="${donHang.nhanVien.emailNV}"></span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Địa chỉ</span>
+                  <span class="info-value" th:text="${donHang.nhanVien.diaChiNV}"></span>
+                </div>
+              </th:block>
+
+              <th:block th:unless="${donHang.nhanVien != null}">
+                <div class="text-muted">
+                  Chưa có nhân viên phụ trách. Nhân viên đăng nhập chỉ cần lưu trạng thái để nhận đơn.
+                </div>
+                <div th:if="${donHang.maNV != null}" class="mt-2 fw-semibold">
+                  Mã nhân viên đã gán:
+                  <span th:text="${donHang.maNV}"></span>
+                </div>
+              </th:block>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-panel mb-4">
+        <div class="info-panel-header d-flex justify-content-between align-items-center">
+          <span><i class="fas fa-box-open me-2 text-primary"></i>Sản phẩm trong đơn</span>
+          <span
+            class="text-danger"
+            th:text="${donHang.tongTienHD != null ? #numbers.formatDecimal(donHang.tongTienHD, 0, 'COMMA', 0, 'POINT') + ' đ' : '0 đ'}"
+          ></span>
+        </div>
+        <div class="info-panel-body">
+          <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle product-table mb-0">
+              <thead class="table-dark text-center">
+                <tr>
+                  <th>STT</th>
+                  <th>Mã SP</th>
+                  <th class="product-name">Tên sản phẩm</th>
+                  <th>ĐVT</th>
+                  <th>SL</th>
+                  <th>Đơn giá</th>
+                  <th>Thành tiền</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="item, stat : ${donHang.chiTietHoaDons}">
+                  <td class="text-center fw-semibold" th:text="${stat.count}"></td>
+                  <td class="text-center" th:text="${item.maSP}"></td>
+                  <td
+                    class="fw-semibold"
+                    th:text="${item.sanPham != null ? item.sanPham.tenSP : 'Không tìm thấy sản phẩm'}"
+                  ></td>
+                  <td
+                    class="text-center"
+                    th:text="${item.sanPham != null ? item.sanPham.donVT : ''}"
+                  ></td>
+                  <td class="text-center" th:text="${item.soLuongSP_HD}"></td>
+                  <td
+                    class="text-end"
+                    th:text="${item.sanPham != null && item.sanPham.donGiaSP != null ? #numbers.formatDecimal(item.sanPham.donGiaSP, 0, 'COMMA', 0, 'POINT') + ' đ' : ''}"
+                  ></td>
+                  <td
+                    class="text-end fw-bold"
+                    th:text="${item.thanhTien != null ? #numbers.formatDecimal(item.thanhTien, 0, 'COMMA', 0, 'POINT') + ' đ' : ''}"
+                  ></td>
+                </tr>
+                <tr th:if="${donHang.chiTietHoaDons == null || donHang.chiTietHoaDons.isEmpty()}">
+                  <td colspan="7" class="text-center text-muted py-4">
+                    Đơn hàng chưa có chi tiết sản phẩm.
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr class="fw-bold table-light">
+                  <td colspan="6" class="text-end">Tổng cộng:</td>
+                  <td
+                    class="text-end text-danger fs-5"
+                    th:text="${donHang.tongTienHD != null ? #numbers.formatDecimal(donHang.tongTienHD, 0, 'COMMA', 0, 'POINT') + ' đ' : '0 đ'}"
+                  ></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

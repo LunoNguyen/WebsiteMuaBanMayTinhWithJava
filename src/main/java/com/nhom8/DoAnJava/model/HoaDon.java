@@ -85,8 +85,18 @@ public class HoaDon {
     @Column(name = "MANV")
     private String maNV; 
 
+    @ManyToOne
+    @JoinColumn(name = "MANV", insertable = false, updatable = false)
+    private NhanVien nhanVien;
+
     @OneToMany(mappedBy = "hoaDon")
     private List<ChiTietHoaDon> chiTietHoaDons;
 
-    
+    public NhanVien getNhanVien() {
+        return nhanVien;
+    }
+
+    public void setNhanVien(NhanVien nhanVien) {
+        this.nhanVien = nhanVien;
+    }
 }

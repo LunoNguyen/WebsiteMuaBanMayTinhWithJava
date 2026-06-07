@@ -2,6 +2,7 @@ package com.nhom8.DoAnJava.controller;
 
 import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 import java.nio.file.Files;
@@ -28,9 +29,12 @@ import com.nhom8.DoAnJava.model.NhanVien;
 import com.nhom8.DoAnJava.model.SanPham;
 import com.nhom8.DoAnJava.model.TaiKhoan;
 import com.nhom8.DoAnJava.model.CapNhatGia;
+import com.nhom8.DoAnJava.model.ChiTietHoaDon;
 import com.nhom8.DoAnJava.model.DanhSachAnh;
+import com.nhom8.DoAnJava.model.HoaDon;
 import com.nhom8.DoAnJava.repository.DanhSachAnhRepository;
 import com.nhom8.DoAnJava.repository.CapNhatGiaRepository;
+import com.nhom8.DoAnJava.repository.ChiTietHoaDonRepository;
 import com.nhom8.DoAnJava.repository.HoaDonRepository;
 import com.nhom8.DoAnJava.repository.KhachHangRepository;
 import com.nhom8.DoAnJava.repository.LoaiSanPhamRepository;
@@ -40,6 +44,8 @@ import com.nhom8.DoAnJava.repository.NhanVienRepository;
 import com.nhom8.DoAnJava.repository.SanPhamRepository;
 import com.nhom8.DoAnJava.repository.TaiKhoanRepository;
 import com.nhom8.DoAnJava.service.AdminService;
+
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 @RequestMapping("/admin")
@@ -56,6 +62,7 @@ public class AdminController {
     @Autowired private NhaCungCapRepository nhaCungCapRepository;
     @Autowired private CapNhatGiaRepository capNhatGiaRepository;
     @Autowired private DanhSachAnhRepository danhSachAnhRepository;
+    @Autowired private ChiTietHoaDonRepository chiTietHoaDonRepository;
 
     // 1. TRANG DASHBOARD ADMIN MAIN
     @GetMapping("/trang-admin")
@@ -105,6 +112,59 @@ public class AdminController {
         // Lưu ý: Trong file giao diện QL_DonHang.html, chúng ta đang dùng biến ${listDH}
         model.addAttribute("listDH", hoaDonRepository.findAll());
         return "Admin/QL_DonHang"; 
+    }
+
+    @GetMapping("/chitiet-donhang/{id}")
+    public String chiTietDonHangAdmin(
+            @PathVariable("id") String id,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        HoaDon donHang = hoaDonRepository.findById(id).orElse(null);
+
+        if (donHang == null) {
+            redirectAttributes.addFlashAttribute("Error", "Khong tim thay don hang!");
+            return "redirect:/admin/ql-donhang";
+        }
+
+        List<ChiTietHoaDon> chiTietHoaDons = chiTietHoaDonRepository.findByMaHD(id);
+        donHang.setChiTietHoaDons(chiTietHoaDons);
+
+        model.addAttribute("donHang", donHang);
+        return "Admin/ChiTietDonHang";
+    }
+
+    @PostMapping("/capnhat-trangthai")
+    public String capNhatTrangThaiDonHang(
+            @RequestParam("maDonHang") String maDonHang,
+            @RequestParam("newStatus") String newStatus,
+            @RequestParam(value = "returnToDetail", defaultValue = "false") boolean returnToDetail,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        HoaDon donHang = hoaDonRepository.findById(maDonHang).orElse(null);
+
+        if (donHang == null) {
+            redirectAttributes.addFlashAttribute("Error", "Khong tim thay don hang!");
+            return "redirect:/admin/ql-donhang";
+        }
+
+        String maTK = (String) session.getAttribute("UserID");
+        if (maTK != null && (donHang.getMaNV() == null || donHang.getMaNV().trim().isEmpty())) {
+            TaiKhoan taiKhoan = taiKhoanRepository.findById(maTK).orElse(null);
+            if (taiKhoan != null && taiKhoan.getMaNV() != null && !taiKhoan.getMaNV().trim().isEmpty()) {
+                donHang.setMaNV(taiKhoan.getMaNV());
+            }
+        }
+
+        donHang.setTrangThaiTT(newStatus);
+        hoaDonRepository.save(donHang);
+
+        redirectAttributes.addFlashAttribute("Success", "Cap nhat trang thai don hang thanh cong!");
+        if (returnToDetail) {
+            return "redirect:/admin/chitiet-donhang/" + maDonHang;
+        }
+        return "redirect:/admin/ql-donhang";
     }
 
     // 7. QUẢN LÝ DANH SÁCH TÀI KHOẢN

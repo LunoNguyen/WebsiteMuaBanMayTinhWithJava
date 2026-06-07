@@ -32,6 +32,7 @@ import com.nhom8.DoAnJava.model.CapNhatGia;
 import com.nhom8.DoAnJava.model.ChiTietHoaDon;
 import com.nhom8.DoAnJava.model.DanhSachAnh;
 import com.nhom8.DoAnJava.model.HoaDon;
+import com.nhom8.DoAnJava.model.NhaCungCap; // Import thêm Model NhaCungCap
 import com.nhom8.DoAnJava.repository.DanhSachAnhRepository;
 import com.nhom8.DoAnJava.repository.CapNhatGiaRepository;
 import com.nhom8.DoAnJava.repository.ChiTietHoaDonRepository;
@@ -52,7 +53,7 @@ import jakarta.servlet.http.HttpSession;
 @RequestMapping("/admin")
 public class AdminController {
 
-    @Autowired private KhachHangRepository khachHangRepository; 
+    @Autowired private KhachHangRepository khachHangRepository;
     @Autowired private NhanVienRepository nhanVienRepository;
     @Autowired private HoaDonRepository hoaDonRepository;
     @Autowired private TaiKhoanRepository taiKhoanRepository;
@@ -77,7 +78,7 @@ public class AdminController {
         int currentYear = (nam != null) ? nam : LocalDate.now().getYear();
 
         Map<String, Object> stats = adminService.getDashboardStats(currentMonth, currentYear);
-        
+
         model.addAttribute("Thang", currentMonth);
         model.addAttribute("Nam", currentYear);
         model.addAllAttributes(stats); // Đẩy tự động toàn bộ thống kê vào Model
@@ -95,25 +96,22 @@ public class AdminController {
     // 3. QUẢN LÝ DANH SÁCH KHÁCH HÀNG
     @GetMapping("/ql-khachhang")
     public String quanLyKhachHang(Model model) {
-        // Lấy danh sách khách hàng từ DB (giả định bạn đã có khachHangRepository)
         model.addAttribute("QLKH", khachHangRepository.findAll());
-        
-        return "Admin/AD_QLKH"; 
+        return "Admin/AD_QLKH";
     }
 
     // 5. QUẢN LÝ DANH SÁCH NHÂN VIÊN
     @GetMapping("/ql-nhanvien")
     public String quanLyNhanVien(Model model) {
         model.addAttribute("QLNV", nhanVienRepository.findAll());
-        return "Admin/AD_QLNV"; 
+        return "Admin/AD_QLNV";
     }
 
     // 6. QUẢN LÝ DANH SÁCH ĐƠN HÀNG
     @GetMapping("/ql-donhang")
     public String quanLyDonHang(Model model) {
-        // Lưu ý: Trong file giao diện QL_DonHang.html, chúng ta đang dùng biến ${listDH}
         model.addAttribute("listDH", hoaDonRepository.findAll());
-        return "Admin/QL_DonHang"; 
+        return "Admin/QL_DonHang";
     }
 
     @GetMapping("/chitiet-donhang/{id}")
@@ -173,7 +171,7 @@ public class AdminController {
     @GetMapping("/ql-taikhoan")
     public String quanLyTaiKhoan(Model model) {
         model.addAttribute("QLTK", taiKhoanRepository.findAll());
-        return "Admin/AD_QLTK"; 
+        return "Admin/AD_QLTK";
     }
 
     // ==========================================
@@ -181,7 +179,6 @@ public class AdminController {
     // ==========================================
     @GetMapping("/create-sp")
     public String createSanPhamView(Model model) {
-        // Đẩy danh sách ra form để chọn Dropdown
         model.addAttribute("dsLoai", loaiSanPhamRepository.findAll());
         model.addAttribute("dsNSX", nhaSanXuatRepository.findAll());
         model.addAttribute("dsNCC", nhaCungCapRepository.findAll());
@@ -272,13 +269,12 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("Error", "Không tìm thấy sản phẩm!");
             return "redirect:/admin/ql-sanpham";
         }
-        
-        // Đẩy dữ liệu cũ và danh sách Dropdown ra View
+
         model.addAttribute("sanPham", sp);
         model.addAttribute("dsLoai", loaiSanPhamRepository.findAll());
         model.addAttribute("dsNSX", nhaSanXuatRepository.findAll());
         model.addAttribute("dsNCC", nhaCungCapRepository.findAll());
-        
+
         return "Admin/Edit_SP";
     }
 
@@ -287,7 +283,6 @@ public class AdminController {
         try {
             SanPham spCu = sanPhamRepository.findById(sanPhamMoi.getMaSP()).orElse(null);
             if(spCu != null) {
-                // Cập nhật các trường từ Form (Giữ lại các trường không sửa như Ảnh)
                 spCu.setTenSP(sanPhamMoi.getTenSP());
                 spCu.setDonGiaSP(sanPhamMoi.getDonGiaSP());
                 spCu.setSoLuongTon(sanPhamMoi.getSoLuongTon());
@@ -295,7 +290,7 @@ public class AdminController {
                 spCu.setMaLoai(sanPhamMoi.getMaLoai());
                 spCu.setMaNCC(sanPhamMoi.getMaNCC());
                 spCu.setMaNSX(sanPhamMoi.getMaNSX());
-                
+
                 sanPhamRepository.save(spCu);
                 redirectAttributes.addFlashAttribute("Success", "Cập nhật sản phẩm thành công!");
             }
@@ -311,13 +306,12 @@ public class AdminController {
     @GetMapping("/create-kh")
     public String createKhachHangView(Model model) {
         model.addAttribute("khachHang", new KhachHang());
-        return "Admin/Create_KH"; 
+        return "Admin/Create_KH";
     }
 
     @PostMapping("/create-kh")
     public String createKhachHangPost(@ModelAttribute KhachHang khachHang, RedirectAttributes redirectAttributes) {
         try {
-            // Lưu trực tiếp xuống Database
             khachHangRepository.save(khachHang);
             redirectAttributes.addFlashAttribute("Success", "Thêm khách hàng thành công!");
         } catch (Exception e) {
@@ -331,13 +325,12 @@ public class AdminController {
     // ==========================================
     @GetMapping("/edit-kh/{id}")
     public String editKhachHangView(@PathVariable("id") String id, Model model, RedirectAttributes redirectAttributes) {
-        // Truy xuất dữ liệu khách hàng từ Database có sẵn để đổ lên Form
         KhachHang kh = khachHangRepository.findById(id).orElse(null);
         if (kh == null) {
             redirectAttributes.addFlashAttribute("Error", "Không tìm thấy khách hàng!");
             return "redirect:/admin/ql-khachhang";
         }
-        
+
         model.addAttribute("khachHang", kh);
         return "Admin/Edit_KH";
     }
@@ -347,13 +340,11 @@ public class AdminController {
         try {
             KhachHang khCu = khachHangRepository.findById(khMoi.getMaKH()).orElse(null);
             if(khCu != null) {
-                // Cập nhật các trường thông tin từ Form gửi lên
                 khCu.setTenKH(khMoi.getTenKH());
                 khCu.setSdtKH(khMoi.getSdtKH());
                 khCu.setDiaChiKH(khMoi.getDiaChiKH());
                 khCu.setEmailKH(khMoi.getEmailKH());
-                
-                // Lưu đè bản ghi đã cập nhật xuống DB
+
                 khachHangRepository.save(khCu);
                 redirectAttributes.addFlashAttribute("Success", "Cập nhật khách hàng thành công!");
             }
@@ -372,7 +363,6 @@ public class AdminController {
             khachHangRepository.deleteById(id);
             redirectAttributes.addFlashAttribute("Success", "Xóa khách hàng thành công!");
         } catch (Exception ex) {
-            // Chốt chặn an toàn: Tránh lỗi sập web khi khách hàng đã có đơn hàng
             redirectAttributes.addFlashAttribute("Error", "Lỗi Khóa Ngoại! Khách hàng này đã có hóa đơn trong hệ thống, không thể xóa.");
         }
         return "redirect:/admin/ql-khachhang";
@@ -384,16 +374,12 @@ public class AdminController {
     @GetMapping("/create-nv")
     public String createNhanVienView(Model model) {
         model.addAttribute("nhanVien", new NhanVien());
-        
-        // Đẩy danh sách chức vụ ra giao diện
-        model.addAttribute("dsChucVu", chucVuRepository.findAll()); 
-        
-        return "admin/Create_NV"; 
+        model.addAttribute("dsChucVu", chucVuRepository.findAll());
+        return "admin/Create_NV";
     }
     @PostMapping("/create-nv")
     public String createNhanVienPost(@ModelAttribute NhanVien nhanVien, RedirectAttributes redirectAttributes) {
         try {
-            // Lưu nhân viên mới vào Database
             nhanVienRepository.save(nhanVien);
             redirectAttributes.addFlashAttribute("Success", "Thêm nhân viên thành công!");
         } catch (Exception e) {
@@ -405,7 +391,6 @@ public class AdminController {
     // ==========================================
     // CHỈNH SỬA THÔNG TIN NHÂN VIÊN
     // ==========================================
-    
     @GetMapping("/edit-nv/{id}")
     public String editNhanVienView(@PathVariable("id") String id, Model model, RedirectAttributes redirectAttributes) {
         NhanVien nv = nhanVienRepository.findById(id).orElse(null);
@@ -413,12 +398,9 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("Error", "Không tìm thấy nhân viên!");
             return "redirect:/admin/ql-nhanvien";
         }
-        
+
         model.addAttribute("nhanVien", nv);
-        
-        // Đẩy danh sách chức vụ ra giao diện
         model.addAttribute("dsChucVu", chucVuRepository.findAll());
-        
         return "admin/Edit_NV";
     }
     @PostMapping("/edit-nv")
@@ -426,13 +408,12 @@ public class AdminController {
         try {
             NhanVien nvCu = nhanVienRepository.findById(nvMoi.getMaNV()).orElse(null);
             if(nvCu != null) {
-                // Lấy dữ liệu từ form và cập nhật vào database sẵn có
                 nvCu.setTenNV(nvMoi.getTenNV());
                 nvCu.setSdtNV(nvMoi.getSdtNV());
                 nvCu.setDiaChiNV(nvMoi.getDiaChiNV());
                 nvCu.setEmailNV(nvMoi.getEmailNV());
-                nvCu.setMaCV(nvMoi.getMaCV()); 
-                
+                nvCu.setMaCV(nvMoi.getMaCV());
+
                 nhanVienRepository.save(nvCu);
                 redirectAttributes.addFlashAttribute("Success", "Cập nhật nhân viên thành công!");
             } else {
@@ -443,16 +424,13 @@ public class AdminController {
         }
         return "redirect:/admin/ql-nhanvien";
     }
-    // ==========================================
-    // XÓA NHÂN VIÊN (BẮT LỖI KHÓA NGOẠI)
-    // ==========================================
+
     @PostMapping("/xoa-nhanvien/{id}")
     public String xoaNhanVien(@PathVariable("id") String id, RedirectAttributes redirectAttributes) {
         try {
             nhanVienRepository.deleteById(id);
             redirectAttributes.addFlashAttribute("Success", "Xóa nhân viên thành công!");
         } catch (Exception ex) {
-            // Chốt chặn: Tránh sập web nếu nhân viên này đang lập hóa đơn hoặc được liên kết với tài khoản
             redirectAttributes.addFlashAttribute("Error", "Lỗi Khóa Ngoại! Nhân viên này đã liên kết với các dữ liệu khác trong hệ thống, không thể xóa.");
         }
         return "redirect:/admin/ql-nhanvien";
@@ -464,11 +442,9 @@ public class AdminController {
     @GetMapping("/tao-tk")
     public String createTaiKhoanView(Model model) {
         model.addAttribute("taiKhoan", new TaiKhoan());
-        
-        // Đẩy danh sách Nhân viên và Khách hàng ra form để chọn Dropdown
         model.addAttribute("dsNhanVien", nhanVienRepository.findAll());
         model.addAttribute("dsKhachHang", khachHangRepository.findAll());
-        return "admin/Create_TK"; 
+        return "admin/Create_TK";
     }
 
     @PostMapping("/tao-tk")
@@ -476,7 +452,6 @@ public class AdminController {
         try {
             if (taiKhoan.getMaNV() != null && taiKhoan.getMaNV().isEmpty()) taiKhoan.setMaNV(null);
             if (taiKhoan.getMaKH() != null && taiKhoan.getMaKH().isEmpty()) taiKhoan.setMaKH(null);
-            // Quan trọng: Mã hóa MD5 mật khẩu (có getBytes() để tránh lỗi) trước khi lưu
             if (taiKhoan.getMatKhau() != null && !taiKhoan.getMatKhau().isEmpty()) {
                 String hashedPass = org.springframework.util.DigestUtils.md5DigestAsHex(taiKhoan.getMatKhau().getBytes()).toUpperCase();
                 taiKhoan.setMatKhau(hashedPass);
@@ -500,7 +475,7 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("Error", "Không tìm thấy tài khoản!");
             return "redirect:/admin/ql-taikhoan";
         }
-        
+
         model.addAttribute("taiKhoan", tk);
         model.addAttribute("dsNhanVien", nhanVienRepository.findAll());
         model.addAttribute("dsKhachHang", khachHangRepository.findAll());
@@ -514,19 +489,18 @@ public class AdminController {
             if(tkCu != null) {
                 tkCu.setEmailTK(tkMoi.getEmailTK());
                 tkCu.setLoaiTaiKhoan(tkMoi.getLoaiTaiKhoan());
-                
-                // [CẬP NHẬT]: Ép cứng thành null nếu là chuỗi rỗng hoặc khoảng trắng
+
                 String maNV = tkMoi.getMaNV();
                 tkCu.setMaNV((maNV == null || maNV.trim().isEmpty()) ? null : maNV.trim());
-                
+
                 String maKH = tkMoi.getMaKH();
                 tkCu.setMaKH((maKH == null || maKH.trim().isEmpty()) ? null : maKH.trim());
-                
+
                 if (tkMoi.getMatKhau() != null && !tkMoi.getMatKhau().trim().isEmpty()) {
                     String hashedPass = org.springframework.util.DigestUtils.md5DigestAsHex(tkMoi.getMatKhau().getBytes()).toUpperCase();
                     tkCu.setMatKhau(hashedPass);
                 }
-                
+
                 taiKhoanRepository.save(tkCu);
                 redirectAttributes.addFlashAttribute("Success", "Cập nhật tài khoản thành công!");
             }
@@ -535,12 +509,10 @@ public class AdminController {
         }
         return "redirect:/admin/ql-taikhoan";
     }
-    // ==========================================
-    // ĐỔI NHANH PHÂN QUYỀN TÀI KHOẢN TRÊN BẢNG
-    // ==========================================
+
     @PostMapping("/doi-loai-taikhoan")
-    public String doiLoaiTaiKhoan(@RequestParam("matk") String matk, 
-                                  @RequestParam("loaiMoi") String loaiMoi, 
+    public String doiLoaiTaiKhoan(@RequestParam("matk") String matk,
+                                  @RequestParam("loaiMoi") String loaiMoi,
                                   RedirectAttributes redirectAttributes) {
         try {
             TaiKhoan tk = taiKhoanRepository.findById(matk).orElse(null);
@@ -555,9 +527,6 @@ public class AdminController {
         return "redirect:/admin/ql-taikhoan";
     }
 
-    // ==========================================
-    // XÓA TÀI KHOẢN
-    // ==========================================
     @PostMapping("/xoa-taikhoan/{id}")
     public String xoaTaiKhoan(@PathVariable("id") String id, RedirectAttributes redirectAttributes) {
         try {
@@ -575,16 +544,58 @@ public class AdminController {
         model.addAttribute("sanPham", new SanPham());
         model.addAttribute("moTa", new MoTa());
         model.addAttribute("MaSPSapTao", adminService.generateMaSP());
+
+        // Đổ dữ liệu ra các ô chọn Dropdown
+        model.addAttribute("dsLoai", loaiSanPhamRepository.findAll());
+        model.addAttribute("dsNSX", nhaSanXuatRepository.findAll());
+        model.addAttribute("dsNCC", nhaCungCapRepository.findAll());
         return "admin/NhapHang";
     }
 
-    // CÁCH 1: XỬ LÝ NHẬP THỦ CÔNG
+    // Tự động tạo mã Nhà Cung Cấp mới tăng dần (Ví dụ: NCC001, NCC002...)
+    private synchronized String generateMaNCC() {
+        List<NhaCungCap> dsNcc = nhaCungCapRepository.findAll();
+        int max = 0;
+        for (NhaCungCap ncc : dsNcc) {
+            try {
+                int num = Integer.parseInt(ncc.getMaNCC().substring(3));
+                if (num > max) {
+                    max = num;
+                }
+            } catch (Exception e) {}
+        }
+        return String.format("NCC%03d", max + 1);
+    }
+
+    // CÁCH 1: XỬ LÝ NHẬP THỦ CÔNG & THÊM NCC MỚI NẾU TÍCH CHỌN
     @PostMapping("/nhap-thu-cong")
-    public String xuLyNhapThuCong(@ModelAttribute SanPham sp, 
-                                  @ModelAttribute MoTa mt, 
+    @Transactional
+    public String xuLyNhapThuCong(@ModelAttribute SanPham sp,
+                                  @ModelAttribute MoTa mt,
                                   @RequestParam("fileAnh") MultipartFile fileAnh,
+                                  @RequestParam(value = "isNewNCC", defaultValue = "false") boolean isNewNCC,
+                                  @RequestParam(value = "tenNCCMoi", required = false) String tenNCCMoi,
+                                  @RequestParam(value = "sdtNCCMoi", required = false) String sdtNCCMoi,
+                                  @RequestParam(value = "diaChiNCCMoi", required = false) String diaChiNCCMoi,
                                   RedirectAttributes redirectAttributes) {
         try {
+            // Nếu người dùng chọn nhập Nhà Cung Cấp mới
+            if (isNewNCC && tenNCCMoi != null && !tenNCCMoi.trim().isEmpty()) {
+                NhaCungCap nccMoi = new NhaCungCap();
+                String newMaNCC = generateMaNCC();
+
+                nccMoi.setMaNCC(newMaNCC);
+                nccMoi.setTenNCC(tenNCCMoi.trim());
+                nccMoi.setSdtNCC(sdtNCCMoi != null ? sdtNCCMoi.trim() : "");
+                nccMoi.setDiaChiNCC(diaChiNCCMoi != null ? diaChiNCCMoi.trim() : "");
+
+                // Lưu NCC mới vào DB trước
+                nhaCungCapRepository.save(nccMoi);
+
+                // Gán mã NCC vừa tạo cho đối tượng sản phẩm sắp lưu
+                sp.setMaNCC(newMaNCC);
+            }
+
             adminService.nhapHangThuCong(sp, mt, fileAnh);
             redirectAttributes.addFlashAttribute("Success", "Thêm sản phẩm thành công!");
         } catch (Exception e) {
@@ -595,16 +606,16 @@ public class AdminController {
 
     // CÁCH 2: XỬ LÝ NHẬP FILE CSV
     @PostMapping("/nhap-file")
-    public String xuLyNhapTuFile(@RequestParam("fileCSV") MultipartFile fileCSV, 
-                                  RedirectAttributes redirectAttributes) {
+    public String xuLyNhapTuFile(@RequestParam("fileCSV") MultipartFile fileCSV,
+                                 RedirectAttributes redirectAttributes) {
         if (fileCSV.isEmpty() || !fileCSV.getOriginalFilename().endsWith(".csv")) {
             redirectAttributes.addFlashAttribute("Error", "File không hợp lệ. Vui lòng chọn file .csv");
             return "redirect:nhap-hang";
         }
         try {
             Map<String, Integer> res = adminService.nhapHangTuCSV(fileCSV);
-            redirectAttributes.addFlashAttribute("Success", 
-                String.format("Hoàn tất! Đã thêm mới %d SP và Cập nhật kho %d SP.", res.get("new"), res.get("update")));
+            redirectAttributes.addFlashAttribute("Success",
+                    String.format("Hoàn tất! Đã thêm mới %d SP và Cập nhật kho %d SP.", res.get("new"), res.get("update")));
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("Error", "Lỗi đọc file: " + e.getMessage());
         }

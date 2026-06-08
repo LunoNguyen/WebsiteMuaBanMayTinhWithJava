@@ -1,22 +1,20 @@
 package com.nhom8.DoAnJava.controller;
 
-import java.time.LocalDateTime;
-import java.time.LocalDate;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-import org.springframework.transaction.annotation.Transactional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -27,20 +25,20 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.nhom8.DoAnJava.model.KhachHang;
-import com.nhom8.DoAnJava.model.MoTa;
-import com.nhom8.DoAnJava.model.NhanVien;
-import com.nhom8.DoAnJava.model.SanPham;
-import com.nhom8.DoAnJava.model.TaiKhoan;
 import com.nhom8.DoAnJava.model.CapNhatGia;
 import com.nhom8.DoAnJava.model.ChiTietHoaDon;
 import com.nhom8.DoAnJava.model.DanhSachAnh;
 import com.nhom8.DoAnJava.model.HoaDon;
-import com.nhom8.DoAnJava.model.NhaCungCap; // Import thêm Model NhaCungCap
-import com.nhom8.DoAnJava.repository.DanhSachAnhRepository;
+import com.nhom8.DoAnJava.model.KhachHang;
+import com.nhom8.DoAnJava.model.MoTa;
+import com.nhom8.DoAnJava.model.NhaCungCap;
+import com.nhom8.DoAnJava.model.NhanVien;
+import com.nhom8.DoAnJava.model.SanPham;
+import com.nhom8.DoAnJava.model.TaiKhoan; // Import thêm Model NhaCungCap
 import com.nhom8.DoAnJava.repository.CapNhatGiaRepository;
 import com.nhom8.DoAnJava.repository.ChiTietHoaDonRepository;
 import com.nhom8.DoAnJava.repository.ChucVuRepository;
+import com.nhom8.DoAnJava.repository.DanhSachAnhRepository;
 import com.nhom8.DoAnJava.repository.GioHangRepository;
 import com.nhom8.DoAnJava.repository.HoaDonRepository;
 import com.nhom8.DoAnJava.repository.KhachHangRepository;

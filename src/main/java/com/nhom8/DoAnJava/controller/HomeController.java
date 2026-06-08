@@ -3,23 +3,21 @@ package com.nhom8.DoAnJava.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 
 import com.nhom8.DoAnJava.model.SanPham;
 import com.nhom8.DoAnJava.repository.LoaiSanPhamRepository;
 import com.nhom8.DoAnJava.repository.NhaSanXuatRepository;
 import com.nhom8.DoAnJava.repository.SanPhamRepository;
-
-import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class HomeController {

@@ -1,12 +1,13 @@
 package com.nhom8.DoAnJava;
 
+import java.sql.Connection;
+
+import javax.sql.DataSource;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-
-import javax.sql.DataSource;
-import java.sql.Connection;
 
 @SpringBootApplication
 public class DoAnJavaApplication {
@@ -29,5 +30,5 @@ public class DoAnJavaApplication {
             }
             System.out.println("=========================================\n");
         };
-    }
+    }   
 }

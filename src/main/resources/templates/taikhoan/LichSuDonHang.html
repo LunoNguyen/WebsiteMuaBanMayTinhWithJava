@@ -8,27 +8,35 @@
   </head>
   <body>
     <div class="container py-5">
-      <h3 class="text-center text-primary mb-4 text-uppercase">
+      <h3 class="text-center text-primary mb-4 text-uppercase fw-bold">
         Lịch sử mua hàng
       </h3>
 
+      <div th:if="${success != null}" class="alert alert-success alert-dismissible fade show mx-auto" style="max-width: 1000px;" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i> <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      
+      <div th:if="${error != null}" class="alert alert-danger alert-dismissible fade show mx-auto" style="max-width: 1000px;" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+
       <div
         th:if="${listDonHang == null or listDonHang.isEmpty()}"
-        class="alert alert-info text-center"
+        class="alert alert-info text-center mx-auto" style="max-width: 1000px;"
       >
-        Bạn chưa có đơn hàng nào.
-        <a th:href="@{/trang-chu}" class="fw-bold text-decoration-none"
-          >Mua sắm ngay!</a
-        >
+        Bạn chưa có đơn hàng nào. 
+        <a th:href="@{/trang-chu}" class="fw-bold text-decoration-none">Mua sắm ngay!</a>
       </div>
 
       <div
         th:unless="${listDonHang == null or listDonHang.isEmpty()}"
-        class="card shadow-sm"
+        class="card shadow-sm mx-auto" style="max-width: 1000px;"
       >
         <div class="card-body p-0">
           <table class="table table-hover align-middle mb-0">
-            <thead class="bg-primary text-white">
+            <thead class="table-primary text-white">
               <tr>
                 <th class="ps-4">Mã Đơn</th>
                 <th>Ngày đặt</th>
@@ -39,37 +47,26 @@
             </thead>
             <tbody>
               <tr th:each="item : ${listDonHang}">
-                <td class="ps-4 fw-bold" th:text="${item.maHD}"></td>
-                <td
-                  th:text="${#temporals.format(item.ngayLap, 'dd/MM/yyyy HH:mm')}"
-                ></td>
-                <td
-                  class="text-danger fw-bold"
-                  th:text="${#numbers.formatDecimal(item.tongTienHD, 0, 'COMMA', 0, 'POINT')} + ' đ'"
-                ></td>
+                <td class="fw-bold ps-4" th:text="${item.maHD}"></td>
+                <td th:text="${#temporals.format(item.ngayLap, 'dd/MM/yyyy HH:mm')}"></td>
+                <td class="text-danger fw-bold" th:text="${#numbers.formatDecimal(item.tongTienHD, 0, 'COMMA', 0, 'POINT')} + ' đ'"></td>
                 <td>
-                  <span
-                    th:if="${#strings.containsIgnoreCase(item.trangThaiTT, 'đặt')}"
-                    class="badge bg-primary text-white"
-                    th:text="${item.trangThaiTT}"
-                  ></span>
-                  <span
-                    th:if="${#strings.containsIgnoreCase(item.trangThaiTT, 'hủy')}"
-                    class="badge bg-danger text-white"
-                    th:text="${item.trangThaiTT}"
-                  ></span>
-                  <span
-                    th:if="${!#strings.containsIgnoreCase(item.trangThaiTT, 'đặt') and !#strings.containsIgnoreCase(item.trangThaiTT, 'hủy')}"
-                    class="badge bg-success text-white"
-                    th:text="${item.trangThaiTT}"
-                  ></span>
+                  <span th:if="${#strings.containsIgnoreCase(item.trangThaiTT, 'đặt')}" class="badge bg-primary text-white" th:text="${item.trangThaiTT}"></span>
+                  
+                  <span th:if="${#strings.containsIgnoreCase(item.trangThaiTT, 'hủy')}" class="badge bg-danger text-white" th:text="${item.trangThaiTT}"></span>
+                  
+                  <span th:if="${!#strings.containsIgnoreCase(item.trangThaiTT, 'đặt') and !#strings.containsIgnoreCase(item.trangThaiTT, 'hủy')}" class="badge bg-success text-white" th:text="${item.trangThaiTT}"></span>
                 </td>
                 <td class="text-center">
-                  <a
-                    th:href="@{'/tai-khoan/chi-tiet-don-hang/' + ${item.maHD}}"
-                    class="btn btn-sm btn-outline-primary"
-                  >
+                  <a th:href="@{'/tai-khoan/chi-tiet-don-hang/' + ${item.maHD}}" class="btn btn-sm btn-outline-primary">
                     <i class="bi bi-eye-fill"></i> Xem chi tiết
+                  </a>
+                  
+                  <a th:if="${item.trangThaiTT == 'Đã đặt' or item.trangThaiTT == 'Đã thanh toán'}"
+                     th:href="@{'/tai-khoan/huy-don?maHD=' + ${item.maHD}}"
+                     onclick="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');"
+                     class="btn btn-sm btn-danger ms-1">
+                     <i class="bi bi-trash-fill"></i> Hủy đơn
                   </a>
                 </td>
               </tr>

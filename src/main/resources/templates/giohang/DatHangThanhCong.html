@@ -7,42 +7,72 @@
     <title>Đặt hàng thành công</title>
   </head>
   <body>
-    <div class="container text-center py-5">
-      <div
-        class="card shadow-sm border-success mx-auto"
-        style="max-width: 600px"
-      >
-        <div class="card-body p-5">
+    <div class="container py-5">
+      <div class="card shadow border-0 mx-auto rounded-3 overflow-hidden" style="max-width: 650px;">
+        
+        <div class="card-header bg-success text-white text-center py-4 border-0">
+          <div class="mb-2">
+            <i class="bi bi-check-circle-fill" style="font-size: 3.5rem;"></i>
+          </div>
+          <h3 class="fw-bold mb-1" style="letter-spacing: 0.5px;">ĐẶT HÀNG THÀNH CÔNG</h3>
+          <p class="mb-0 opacity-75 small">Cảm ơn bạn đã tin tưởng và mua sắm tại Phong Vũ</p>
+        </div>
+
+        <div class="card-body p-4 p-sm-5 bg-white">
+          
           <div class="mb-4">
-            <i
-              class="bi bi-check-circle-fill text-success"
-              style="font-size: 4rem"
-            ></i>
+            <h5 class="text-dark fw-bold mb-3 pb-2 border-bottom"><i class="bi bi-receipt text-primary me-2"></i>Thông tin đơn hàng</h5>
+            <div class="row g-3 small">
+              <div class="col-6 text-muted">Mã đơn hàng:</div>
+              <div class="col-6 text-end fw-bold text-dark" th:text="${MaHD != null ? MaHD : 'Chưa rõ'}"></div>
+              
+              <div class="col-6 text-muted">Hình thức thanh toán:</div>
+              <div class="col-6 text-end fw-semibold text-primary">
+                <span th:if="${PhuongThucTT == 'COD'}">💵 COD (Nhận hàng trả tiền)</span>
+                <span th:if="${PhuongThucTT == 'QR'}">📱 Chuyển khoản qua QR</span>
+                <span th:if="${PhuongThucTT == 'CASH'}">🏪 Tiền mặt tại quầy</span>
+              </div>
+
+              <div class="col-6 text-muted">Tổng tiền thanh toán:</div>
+              <div class="col-6 text-end fw-bold text-danger fs-5" 
+                   th:text="${TongTien != null ? #numbers.formatDecimal(TongTien, 0, 'COMMA', 0, 'POINT') + ' đ' : '0 đ'}"></div>
+            </div>
           </div>
 
-          <h2 class="text-success mb-3">ĐẶT HÀNG THÀNH CÔNG!</h2>
+          <div th:if="${PhuongThucTT == 'QR' and MaHD != null}" class="my-4 p-4 border border-2 rounded-3 bg-light text-center shadow-sm" style="border-color: #3456c4 !important;">
+            <h6 class="text-primary fw-bold mb-3 text-uppercase"><i class="bi bi-qr-code-scan me-2"></i>Quét mã qua App Ngân hàng</h6>
+            
+            <div class="bg-white p-3 d-inline-block rounded-3 shadow-sm mb-3 border">
+              <img th:src="@{https://img.vietqr.io/image/MB-2100609032005-compact2.jpg(amount=${#numbers.formatDecimal(TongTien, 0, 0)}, addInfo='Thanh toan don hang ' + ${MaHD})}" 
+                   alt="Mã QR thanh toán" class="img-fluid" style="max-width: 210px; display: block;"/>
+            </div>
+            
+            <div class="text-start bg-white p-3 rounded-2 border small mx-auto" style="max-width: 480px;">
+              <div class="text-muted mb-1">Chủ tài khoản: <strong class="text-dark">NGUYEN VU PHONG</strong></div>
+              <div class="text-muted mb-1">Nội dung CK bắt buộc: <strong class="text-primary" th:text="'Thanh toan don hang ' + ${MaHD}"></strong></div>
+              <div class="text-muted text-center mt-2 border-top pt-2 text-danger fw-semibold" style="font-size: 11px;">
+                <i class="bi bi-info-circle me-1"></i> Hệ thống tự động duyệt đơn ngay sau khi nhận được tiền!
+              </div>
+            </div>
+          </div>
 
-          <p class="lead mb-4">
-            Cảm ơn bạn đã mua sắm tại Phong Vũ.<br />
-            Đơn hàng của bạn đang được xử lý và sẽ sớm được giao đến địa chỉ đã
-            đăng ký.
+          <p class="text-muted text-center small mb-4 px-3">
+            Đơn hàng của bạn đang được hệ thống tiếp nhận và xử lý siêu tốc. Mọi thông tin trạng thái mới nhất sẽ được cập nhật liên tục trong lịch sử mua hàng của bạn.
           </p>
 
-          <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
-            <a
-              th:href="@{/trang-chu}"
-              class="btn btn-primary btn-lg px-4 gap-3"
-            >
-              <i class="bi bi-house-door-fill"></i> Về trang chủ
-            </a>
-
-            <a
-              th:href="@{/tai-khoan/lich-su-don-hang}"
-              class="btn btn-outline-secondary btn-lg px-4"
-            >
-              Xem lịch sử đơn hàng
-            </a>
+          <div class="row g-2 pt-2">
+            <div class="col-sm-6">
+              <a th:href="@{/trang-chu}" class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm" style="background-color: #3456c4; border-color: #3456c4; border-radius: 8px;">
+                <i class="bi bi-house-door-fill me-2"></i>Tiếp tục mua sắm
+              </a>
+            </div>
+            <div class="col-sm-6">
+              <a th:href="@{/tai-khoan/lich-su-don-hang}" class="btn btn-outline-secondary w-100 py-2.5 fw-semibold" style="border-radius: 8px;">
+                <i class="bi bi-clock-history me-2"></i>Xem lịch sử đơn hàng
+              </a>
+            </div>
           </div>
+
         </div>
       </div>
     </div>

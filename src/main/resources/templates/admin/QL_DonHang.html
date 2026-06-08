@@ -30,7 +30,10 @@
                 <option value="">Tat ca trang thai</option>
                 <option value="Đã đặt">Da dat</option>
                 <option value="Đang giao">Dang giao</option>
+                <option value="Đã giao">Da giao</option>
                 <option value="Đã thanh toán">Da thanh toan</option>
+                <option value="Đã nhận hàng">Da nhan hang</option>
+                <option value="Không nhận hàng">Khong nhan hang</option>
                 <option value="Đã hủy">Da huy</option>
               </select>
             </div>
@@ -54,6 +57,8 @@
                   <th>Mã ĐH</th>
                   <th>Khách hàng</th>
                   <th>Ngày lập</th>
+                  <th>Khuyến mãi</th>
+                  <th class="text-end">Giảm giá</th>
                   <th class="text-end">Tổng tiền</th>
                   <th style="min-width: 280px">Trạng thái & Cập nhật</th>
                   <th>Chi tiết</th>
@@ -81,6 +86,18 @@
                     class="text-center"
                     th:text="${#temporals.format(item.ngayLap, 'dd/MM/yyyy')}"
                   ></td>
+                  <td class="text-center" th:with="km=${KhuyenMaiTheoHD[item.maHD]}">
+                    <span th:if="${km != null}" class="badge bg-info text-dark" th:text="${km.maKM}"></span>
+                    <span th:unless="${km != null}" class="text-muted">-</span>
+                  </td>
+                  <td class="text-end" th:with="tienGiam=${TienGiamTheoHD[item.maHD]}">
+                    <span
+                      th:if="${tienGiam != null and tienGiam > 0}"
+                      class="text-success fw-bold"
+                      th:text="'- ' + ${#numbers.formatDecimal(tienGiam, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+                    ></span>
+                    <span th:unless="${tienGiam != null and tienGiam > 0}" class="text-muted">-</span>
+                  </td>
                   <td
                     class="text-end fw-bold text-success"
                     th:text="${#numbers.formatDecimal(item.tongTienHD, 0, 'COMMA', 0, 'POINT')} + ' đ'"
@@ -88,16 +105,16 @@
 
                   <td class="text-center">
                     <th:block
-                      th:if="${item.trangThaiTT == 'Đã hủy' or item.trangThaiTT == 'Đã thanh toán'}"
+                      th:if="${item.trangThaiTT == 'Đã hủy' or item.trangThaiTT == 'Đã nhận hàng' or item.trangThaiTT == 'Không nhận hàng'}"
                     >
                       <span
-                        th:class="'badge fs-6 ' + (${item.trangThaiTT == 'Đã hủy'} ? 'bg-danger' : 'bg-success')"
+                        th:class="'badge fs-6 ' + (${item.trangThaiTT == 'Đã hủy' or item.trangThaiTT == 'Không nhận hàng'} ? 'bg-danger' : 'bg-success')"
                         th:text="${item.trangThaiTT}"
                       ></span>
                     </th:block>
 
                     <th:block
-                      th:unless="${item.trangThaiTT == 'Đã hủy' or item.trangThaiTT == 'Đã thanh toán'}"
+                      th:unless="${item.trangThaiTT == 'Đã hủy' or item.trangThaiTT == 'Đã nhận hàng' or item.trangThaiTT == 'Không nhận hàng'}"
                     >
                       <form
                         th:action="@{/admin/capnhat-trangthai}"
@@ -116,7 +133,7 @@
                             style="width: 140px"
                           >
                             <option
-                              th:each="st : ${ {'Đã đặt', 'Đang giao', 'Đã thanh toán', 'Đã hủy'} }"
+                              th:each="st : ${ {'Đã đặt', 'Đã thanh toán', 'Đang giao', 'Đã giao', 'Đã nhận hàng', 'Không nhận hàng', 'Đã hủy'} }"
                               th:value="${st}"
                               th:text="${st}"
                               th:selected="${item.trangThaiTT == st}"

@@ -1,7 +1,10 @@
 package com.nhom8.DoAnJava.controller;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -21,12 +24,14 @@ import com.nhom8.DoAnJava.dto.DangNhapDTO;
 import com.nhom8.DoAnJava.model.ChiTietHoaDon;
 import com.nhom8.DoAnJava.model.HoaDon;
 import com.nhom8.DoAnJava.model.KhachHang;
+import com.nhom8.DoAnJava.model.KhuyenMai;
 import com.nhom8.DoAnJava.model.SanPham;
 import com.nhom8.DoAnJava.model.TaiKhoan;
 import com.nhom8.DoAnJava.repository.ChiTietHoaDonRepository;
 import com.nhom8.DoAnJava.repository.GioHangRepository;
 import com.nhom8.DoAnJava.repository.HoaDonRepository;
 import com.nhom8.DoAnJava.repository.KhachHangRepository;
+import com.nhom8.DoAnJava.repository.KhuyenMaiRepository;
 import com.nhom8.DoAnJava.repository.SanPhamRepository;
 import com.nhom8.DoAnJava.repository.TaiKhoanRepository;
 
@@ -44,6 +49,7 @@ public class TaiKhoanController {
     @Autowired private HoaDonRepository hoaDonRepository;
     @Autowired private ChiTietHoaDonRepository chiTietHoaDonRepository;
     @Autowired private SanPhamRepository sanPhamRepository;
+    @Autowired private KhuyenMaiRepository khuyenMaiRepository;
 
     @GetMapping("/dang-nhap")
     public String dangNhap(Model model) {
@@ -66,6 +72,14 @@ public class TaiKhoanController {
         session.setAttribute("UserID", tk.getMaTK());
         session.setAttribute("UserEmail", tk.getEmailTK());
         session.setAttribute("AccountType", tk.getLoaiTaiKhoan());
+        String tenNguoiDung = tk.getEmailTK();
+        if (tk.getMaKH() != null) {
+            KhachHang khachHang = khachHangRepository.findById(tk.getMaKH()).orElse(null);
+            if (khachHang != null && khachHang.getTenKH() != null && !khachHang.getTenKH().trim().isEmpty()) {
+                tenNguoiDung = khachHang.getTenKH().trim();
+            }
+        }
+        session.setAttribute("UserName", tenNguoiDung);
         
         if ("Admin".equals(tk.getLoaiTaiKhoan()) || "Nhân viên".equals(tk.getLoaiTaiKhoan())) {
             return "redirect:/admin/trang-admin";
@@ -147,6 +161,8 @@ public class TaiKhoanController {
         List<HoaDon> listDonHang = (tk != null && tk.getMaKH() != null) ? hoaDonRepository.findByKhachHang_MaKHOrderByNgayLapDesc(tk.getMaKH()) : new ArrayList<>();
         
         model.addAttribute("listDonHang", listDonHang);
+        model.addAttribute("KhuyenMaiTheoHD", taoMapKhuyenMaiTheoHoaDon(listDonHang));
+        model.addAttribute("TienGiamTheoHD", taoMapTienGiamTheoHoaDon(listDonHang));
         return "taikhoan/LichSuDonHang";
     }
 
@@ -162,7 +178,11 @@ public class TaiKhoanController {
             return "redirect:/tai-khoan/lich-su-don-hang";
         }
 
+        List<ChiTietHoaDon> chiTietHoaDons = chiTietHoaDonRepository.findByMaHD(id);
+        donHang.setChiTietHoaDons(chiTietHoaDons);
+
         model.addAttribute("donHang", donHang);
+        themThongTinKhuyenMaiHoaDon(model, donHang, chiTietHoaDons);
         return "taikhoan/ChiTietDonHang";
     }
 
@@ -218,6 +238,63 @@ public class TaiKhoanController {
         } catch (Exception e) {
             return "TK_KH" + System.currentTimeMillis() % 1000;
         }
+    }
+
+    private Map<String, KhuyenMai> taoMapKhuyenMaiTheoHoaDon(List<HoaDon> hoaDons) {
+        Map<String, KhuyenMai> result = new HashMap<>();
+        for (HoaDon hoaDon : hoaDons) {
+            if (hoaDon != null && hoaDon.getMaHD() != null) {
+                khuyenMaiRepository.findByMaHD(hoaDon.getMaHD())
+                        .ifPresent(khuyenMai -> result.put(hoaDon.getMaHD(), khuyenMai));
+            }
+        }
+        return result;
+    }
+
+    private Map<String, BigDecimal> taoMapTienGiamTheoHoaDon(List<HoaDon> hoaDons) {
+        Map<String, BigDecimal> result = new HashMap<>();
+        for (HoaDon hoaDon : hoaDons) {
+            if (hoaDon != null && hoaDon.getMaHD() != null) {
+                BigDecimal tongTienHang = tinhTongTienHang(chiTietHoaDonRepository.findByMaHD(hoaDon.getMaHD()));
+                result.put(hoaDon.getMaHD(), tinhTienGiam(tongTienHang, hoaDon.getTongTienHD()));
+            }
+        }
+        return result;
+    }
+
+    private void themThongTinKhuyenMaiHoaDon(Model model, HoaDon hoaDon, List<ChiTietHoaDon> chiTietHoaDons) {
+        BigDecimal tongTienHang = tinhTongTienHang(chiTietHoaDons);
+        BigDecimal tienGiam = tinhTienGiam(tongTienHang, hoaDon != null ? hoaDon.getTongTienHD() : null);
+
+        model.addAttribute("TongTienHang", tongTienHang);
+        model.addAttribute("TienGiam", tienGiam);
+        model.addAttribute("KhuyenMaiDonHang",
+                hoaDon != null && hoaDon.getMaHD() != null
+                        ? khuyenMaiRepository.findByMaHD(hoaDon.getMaHD()).orElse(null)
+                        : null);
+    }
+
+    private BigDecimal tinhTongTienHang(List<ChiTietHoaDon> chiTietHoaDons) {
+        BigDecimal tongTienHang = BigDecimal.ZERO;
+        if (chiTietHoaDons == null) {
+            return tongTienHang;
+        }
+
+        for (ChiTietHoaDon chiTiet : chiTietHoaDons) {
+            if (chiTiet != null && chiTiet.getThanhTien() != null) {
+                tongTienHang = tongTienHang.add(chiTiet.getThanhTien());
+            }
+        }
+        return tongTienHang;
+    }
+
+    private BigDecimal tinhTienGiam(BigDecimal tongTienHang, BigDecimal tongTienHoaDon) {
+        if (tongTienHang == null || tongTienHoaDon == null) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal tienGiam = tongTienHang.subtract(tongTienHoaDon);
+        return tienGiam.compareTo(BigDecimal.ZERO) > 0 ? tienGiam : BigDecimal.ZERO;
     }
 
     private String generateMaKH() {

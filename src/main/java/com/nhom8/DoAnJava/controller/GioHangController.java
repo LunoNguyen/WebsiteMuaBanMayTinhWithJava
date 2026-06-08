@@ -22,12 +22,14 @@ import com.nhom8.DoAnJava.model.ChiTietHoaDon;
 import com.nhom8.DoAnJava.model.GioHang;
 import com.nhom8.DoAnJava.model.HoaDon;
 import com.nhom8.DoAnJava.model.KhachHang;
+import com.nhom8.DoAnJava.model.KhuyenMai;
 import com.nhom8.DoAnJava.model.SanPham;
 import com.nhom8.DoAnJava.model.TaiKhoan;
 import com.nhom8.DoAnJava.repository.ChiTietHoaDonRepository;
 import com.nhom8.DoAnJava.repository.GioHangRepository;
 import com.nhom8.DoAnJava.repository.HoaDonRepository;
 import com.nhom8.DoAnJava.repository.KhachHangRepository;
+import com.nhom8.DoAnJava.repository.KhuyenMaiRepository;
 import com.nhom8.DoAnJava.repository.SanPhamRepository;
 import com.nhom8.DoAnJava.repository.TaiKhoanRepository;
 
@@ -44,6 +46,7 @@ public class GioHangController {
     @Autowired private KhachHangRepository khachHangRepository;
     @Autowired private HoaDonRepository hoaDonRepository;
     @Autowired private ChiTietHoaDonRepository chiTietHoaDonRepository;
+    @Autowired private KhuyenMaiRepository khuyenMaiRepository;
 
     private List<ItemGioHangDTO> layGioHang(HttpSession session) {
         @SuppressWarnings("unchecked")
@@ -138,12 +141,60 @@ public class GioHangController {
         model.addAttribute("mapTonKho", mapTonKho); // Đẩy map này ra ngoài giao diện HTML
 
         int tongSoLuong = lstGioHang.stream().mapToInt(this::laySoLuongItem).sum();
-        double tongTien = lstGioHang.stream().mapToDouble(ItemGioHangDTO::getDThanhTien).sum();
+        BigDecimal tongTien = tinhTongTien(lstGioHang);
+        KetQuaKhuyenMai ketQuaKhuyenMai = tinhKhuyenMaiDangApDung(session, lstGioHang, tongTien);
+        if (!ketQuaKhuyenMai.isHopLe()) {
+            session.removeAttribute("MaKhuyenMai");
+        }
 
         model.addAttribute("lstGioHang", lstGioHang);
         model.addAttribute("TongSoLuong", tongSoLuong);
         model.addAttribute("TongTien", tongTien);
+        model.addAttribute("MaKhuyenMai", ketQuaKhuyenMai.getMaKM());
+        model.addAttribute("TenKhuyenMai", ketQuaKhuyenMai.getTenKM());
+        model.addAttribute("TienGiam", ketQuaKhuyenMai.getTienGiam());
+        model.addAttribute("TongTienSauGiam", ketQuaKhuyenMai.getTongTienSauGiam());
+        model.addAttribute("ThongBaoKhuyenMai", ketQuaKhuyenMai.getThongBao());
         return "giohang/GioHang";
+    }
+
+    @PostMapping("/ap-dung-khuyen-mai")
+    public String apDungKhuyenMai(
+            @RequestParam(value = "maKhuyenMai", required = false) String maKhuyenMai,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        List<ItemGioHangDTO> lstGioHang = layGioHang(session);
+        if (lstGioHang.isEmpty()) {
+            redirectAttributes.addFlashAttribute("Error", "Gio hang dang trong.");
+            return "redirect:/gio-hang/";
+        }
+
+        String maKM = chuanHoaMaKhuyenMai(maKhuyenMai);
+        if (maKM == null) {
+            session.removeAttribute("MaKhuyenMai");
+            redirectAttributes.addFlashAttribute("Error", "Vui long nhap ma khuyen mai.");
+            return "redirect:/gio-hang/";
+        }
+
+        BigDecimal tongTien = tinhTongTien(lstGioHang);
+        KetQuaKhuyenMai ketQuaKhuyenMai = tinhKhuyenMai(maKM, lstGioHang, tongTien);
+        if (!ketQuaKhuyenMai.isHopLe()) {
+            session.removeAttribute("MaKhuyenMai");
+            redirectAttributes.addFlashAttribute("Error", ketQuaKhuyenMai.getThongBao());
+            return "redirect:/gio-hang/";
+        }
+
+        session.setAttribute("MaKhuyenMai", ketQuaKhuyenMai.getMaKM());
+        redirectAttributes.addFlashAttribute("Success", "Da ap dung ma khuyen mai " + ketQuaKhuyenMai.getMaKM() + ".");
+        return "redirect:/gio-hang/";
+    }
+
+    @PostMapping("/huy-khuyen-mai")
+    public String huyKhuyenMai(HttpSession session, RedirectAttributes redirectAttributes) {
+        session.removeAttribute("MaKhuyenMai");
+        redirectAttributes.addFlashAttribute("Success", "Da huy ma khuyen mai.");
+        return "redirect:/gio-hang/";
     }
 
     @PostMapping("/cap-nhat")
@@ -245,12 +296,19 @@ public class GioHangController {
                 tongTien = tongTien.add(thanhTien);
             }
 
+            KetQuaKhuyenMai ketQuaKhuyenMai = tinhKhuyenMaiDangApDung(session, lstGioHang, tongTien);
+            if (!ketQuaKhuyenMai.isHopLe()) {
+                session.removeAttribute("MaKhuyenMai");
+                throw new RuntimeException(ketQuaKhuyenMai.getThongBao());
+            }
+            BigDecimal tongTienSauGiam = ketQuaKhuyenMai.getTongTienSauGiam();
+
             String maHD = generateMaHD();
             HoaDon hoaDon = new HoaDon();
             hoaDon.setMaHD(maHD);
             hoaDon.setKhachHang(khachHang);
             hoaDon.setNgayLap(LocalDateTime.now());
-            hoaDon.setTongTienHD(tongTien);
+            hoaDon.setTongTienHD(tongTienSauGiam);
             hoaDon.setTrangThaiTT(("QR".equals(phuongThucTT) || "CASH".equals(phuongThucTT)) ? "Đã thanh toán" : "Đã đặt");
             hoaDonRepository.save(hoaDon);
 
@@ -268,8 +326,16 @@ public class GioHangController {
                 sanPhamRepository.save(sp);
             }
 
+            if (ketQuaKhuyenMai.getMaKM() != null) {
+                khuyenMaiRepository.findByMaKMIgnoreCase(ketQuaKhuyenMai.getMaKM()).ifPresent(km -> {
+                    km.setMaHD(maHD);
+                    khuyenMaiRepository.save(km);
+                });
+            }
+
             gioHangRepository.deleteAll(gioHangRepository.findByMaTK(maTK));
             session.removeAttribute("GioHang");
+            session.removeAttribute("MaKhuyenMai");
             
             return "redirect:/gio-hang/dat-hang-thanh-cong?id=" + maHD + "&pttt=" + phuongThucTT;
 
@@ -293,6 +359,162 @@ public class GioHangController {
             });
         }
         return "giohang/DatHangThanhCong";
+    }
+
+    private BigDecimal tinhTongTien(List<ItemGioHangDTO> lstGioHang) {
+        BigDecimal tongTien = BigDecimal.ZERO;
+        for (ItemGioHangDTO item : lstGioHang) {
+            if (item == null) {
+                continue;
+            }
+            BigDecimal donGia = BigDecimal.valueOf(item.getdDonGia() != null ? item.getdDonGia() : 0);
+            tongTien = tongTien.add(donGia.multiply(BigDecimal.valueOf(laySoLuongItem(item))));
+        }
+        return tongTien;
+    }
+
+    private KetQuaKhuyenMai tinhKhuyenMaiDangApDung(HttpSession session, List<ItemGioHangDTO> lstGioHang, BigDecimal tongTien) {
+        String maKM = chuanHoaMaKhuyenMai((String) session.getAttribute("MaKhuyenMai"));
+        if (maKM == null) {
+            return KetQuaKhuyenMai.khongApDung(tongTien);
+        }
+        return tinhKhuyenMai(maKM, lstGioHang, tongTien);
+    }
+
+    private KetQuaKhuyenMai tinhKhuyenMai(String maKM, List<ItemGioHangDTO> lstGioHang, BigDecimal tongTien) {
+        KhuyenMai khuyenMai = khuyenMaiRepository.findByMaKMIgnoreCase(maKM).orElse(null);
+        if (khuyenMai == null) {
+            return KetQuaKhuyenMai.khongHopLe(maKM, tongTien, "Ma khuyen mai khong ton tai.");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        if (khuyenMai.getNgayBD() != null && khuyenMai.getNgayBD().isAfter(now)) {
+            return KetQuaKhuyenMai.khongHopLe(khuyenMai.getMaKM(), tongTien, "Ma khuyen mai chua den ngay ap dung.");
+        }
+        if (khuyenMai.getNgayKT() != null && khuyenMai.getNgayKT().isBefore(now)) {
+            return KetQuaKhuyenMai.khongHopLe(khuyenMai.getMaKM(), tongTien, "Ma khuyen mai da het han.");
+        }
+        if (khuyenMai.getSoTienToiThieuNhanKM() != null && tongTien.compareTo(khuyenMai.getSoTienToiThieuNhanKM()) < 0) {
+            return KetQuaKhuyenMai.khongHopLe(khuyenMai.getMaKM(), tongTien, "Don hang chua dat gia tri toi thieu de nhan khuyen mai.");
+        }
+
+        BigDecimal tienApDung = tinhTienApDungKhuyenMai(khuyenMai.getMaKM(), lstGioHang);
+        if (tienApDung.compareTo(BigDecimal.ZERO) <= 0) {
+            return KetQuaKhuyenMai.khongHopLe(khuyenMai.getMaKM(), tongTien, "Ma khuyen mai khong ap dung cho san pham trong gio hang.");
+        }
+
+        BigDecimal phanTram = parsePhanTramKhuyenMai(khuyenMai.getPhanTramKM());
+        BigDecimal tienGiam = tienApDung.multiply(phanTram).divide(BigDecimal.valueOf(100));
+        if (khuyenMai.getSoTienToiDaKM() != null && khuyenMai.getSoTienToiDaKM().compareTo(BigDecimal.ZERO) > 0) {
+            tienGiam = tienGiam.min(khuyenMai.getSoTienToiDaKM());
+        }
+        if (tienGiam.compareTo(tongTien) > 0) {
+            tienGiam = tongTien;
+        }
+
+        return KetQuaKhuyenMai.hopLe(
+                khuyenMai.getMaKM(),
+                khuyenMai.getTenKM(),
+                tienGiam,
+                tongTien.subtract(tienGiam));
+    }
+
+    private BigDecimal tinhTienApDungKhuyenMai(String maKM, List<ItemGioHangDTO> lstGioHang) {
+        if (khuyenMaiRepository.countChiTietByMaKM(maKM) <= 0) {
+            return tinhTongTien(lstGioHang);
+        }
+
+        List<String> maSPApDung = khuyenMaiRepository.findMaSPApDungByMaKM(maKM);
+        BigDecimal tongTienApDung = BigDecimal.ZERO;
+        for (ItemGioHangDTO item : lstGioHang) {
+            if (item != null && maSPApDung.contains(item.getiMaSP())) {
+                BigDecimal donGia = BigDecimal.valueOf(item.getdDonGia() != null ? item.getdDonGia() : 0);
+                tongTienApDung = tongTienApDung.add(donGia.multiply(BigDecimal.valueOf(laySoLuongItem(item))));
+            }
+        }
+        return tongTienApDung;
+    }
+
+    private BigDecimal parsePhanTramKhuyenMai(String phanTramKM) {
+        if (phanTramKM == null || phanTramKM.trim().isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        String value = phanTramKM.trim()
+                .replace("%", "")
+                .replace(",", ".")
+                .replaceAll("[^0-9.]", "");
+
+        if (value.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        try {
+            return new BigDecimal(value);
+        } catch (NumberFormatException ex) {
+            return BigDecimal.ZERO;
+        }
+    }
+
+    private String chuanHoaMaKhuyenMai(String maKhuyenMai) {
+        if (maKhuyenMai == null || maKhuyenMai.trim().isEmpty()) {
+            return null;
+        }
+        return maKhuyenMai.trim().toUpperCase();
+    }
+
+    private static class KetQuaKhuyenMai {
+        private final boolean hopLe;
+        private final String maKM;
+        private final String tenKM;
+        private final BigDecimal tienGiam;
+        private final BigDecimal tongTienSauGiam;
+        private final String thongBao;
+
+        private KetQuaKhuyenMai(boolean hopLe, String maKM, String tenKM, BigDecimal tienGiam, BigDecimal tongTienSauGiam, String thongBao) {
+            this.hopLe = hopLe;
+            this.maKM = maKM;
+            this.tenKM = tenKM;
+            this.tienGiam = tienGiam;
+            this.tongTienSauGiam = tongTienSauGiam;
+            this.thongBao = thongBao;
+        }
+
+        static KetQuaKhuyenMai khongApDung(BigDecimal tongTien) {
+            return new KetQuaKhuyenMai(true, null, null, BigDecimal.ZERO, tongTien, null);
+        }
+
+        static KetQuaKhuyenMai khongHopLe(String maKM, BigDecimal tongTien, String thongBao) {
+            return new KetQuaKhuyenMai(false, maKM, null, BigDecimal.ZERO, tongTien, thongBao);
+        }
+
+        static KetQuaKhuyenMai hopLe(String maKM, String tenKM, BigDecimal tienGiam, BigDecimal tongTienSauGiam) {
+            return new KetQuaKhuyenMai(true, maKM, tenKM, tienGiam, tongTienSauGiam.max(BigDecimal.ZERO), null);
+        }
+
+        boolean isHopLe() {
+            return hopLe;
+        }
+
+        String getMaKM() {
+            return maKM;
+        }
+
+        String getTenKM() {
+            return tenKM;
+        }
+
+        BigDecimal getTienGiam() {
+            return tienGiam;
+        }
+
+        BigDecimal getTongTienSauGiam() {
+            return tongTienSauGiam;
+        }
+
+        String getThongBao() {
+            return thongBao;
+        }
     }
 
     private synchronized String generateMaHD() {

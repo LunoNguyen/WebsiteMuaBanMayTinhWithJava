@@ -115,7 +115,7 @@
               style="color: #3456c4"
             >
               <i class="bi bi-person-circle fs-5 me-1 align-middle"></i>
-              <span th:text="${session.UserName}"></span>
+              <span th:text="${session.UserName != null ? session.UserName : session.UserEmail}"></span>
             </button>
             <ul class="dropdown-menu shadow border-0 mt-2">
               <li>

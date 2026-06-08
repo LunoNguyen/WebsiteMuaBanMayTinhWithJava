@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ import com.nhom8.DoAnJava.model.ChiTietHoaDon;
 import com.nhom8.DoAnJava.model.DanhSachAnh;
 import com.nhom8.DoAnJava.model.HoaDon;
 import com.nhom8.DoAnJava.model.KhachHang;
+import com.nhom8.DoAnJava.model.KhuyenMai;
 import com.nhom8.DoAnJava.model.MoTa;
 import com.nhom8.DoAnJava.model.NhaCungCap;
 import com.nhom8.DoAnJava.model.NhanVien;
@@ -42,6 +44,7 @@ import com.nhom8.DoAnJava.repository.DanhSachAnhRepository;
 import com.nhom8.DoAnJava.repository.GioHangRepository;
 import com.nhom8.DoAnJava.repository.HoaDonRepository;
 import com.nhom8.DoAnJava.repository.KhachHangRepository;
+import com.nhom8.DoAnJava.repository.KhuyenMaiRepository;
 import com.nhom8.DoAnJava.repository.LoaiSanPhamRepository;
 import com.nhom8.DoAnJava.repository.MoTaRepository;
 import com.nhom8.DoAnJava.repository.NhaCungCapRepository;
@@ -74,6 +77,7 @@ public class AdminController {
     @Autowired private ChucVuRepository chucVuRepository;
     @Autowired private MoTaRepository moTaRepository;
     @Autowired private GioHangRepository gioHangRepository;
+    @Autowired private KhuyenMaiRepository khuyenMaiRepository;
 
     // 1. TRANG DASHBOARD ADMIN MAIN
     @GetMapping("/trang-admin")
@@ -179,8 +183,18 @@ public class AdminController {
     // 6. QUẢN LÝ DANH SÁCH ĐƠN HÀNG
     @GetMapping("/ql-donhang")
     public String quanLyDonHang(Model model) {
-        model.addAttribute("listDH", hoaDonRepository.findAll());
+        List<HoaDon> listDH = hoaDonRepository.findAllByOrderByNgayLapDesc();
+        model.addAttribute("listDH", listDH);
+        model.addAttribute("KhuyenMaiTheoHD", taoMapKhuyenMaiTheoHoaDon(listDH));
+        model.addAttribute("TienGiamTheoHD", taoMapTienGiamTheoHoaDon(listDH));
         return "Admin/QL_DonHang";
+    }
+
+    // QUAN LY DANH SACH KHUYEN MAI
+    @GetMapping("/ql-khuyenmai")
+    public String quanLyKhuyenMai(Model model) {
+        model.addAttribute("QLKM", khuyenMaiRepository.findAllForQuanLy());
+        return "Admin/AD_QLKM";
     }
 
     @GetMapping("/chitiet-donhang/{id}")
@@ -200,6 +214,7 @@ public class AdminController {
         donHang.setChiTietHoaDons(chiTietHoaDons);
 
         model.addAttribute("donHang", donHang);
+        themThongTinKhuyenMaiHoaDon(model, donHang, chiTietHoaDons);
         return "Admin/ChiTietDonHang";
     }
 
@@ -226,10 +241,33 @@ public class AdminController {
             }
         }
 
+        String trangThaiCu = donHang.getTrangThaiTT();
+        if (laTrangThaiKetThuc(trangThaiCu)) {
+            redirectAttributes.addFlashAttribute("Error", "Don hang da o trang thai ket thuc, khong the cap nhat tiep.");
+            return returnToDetail ? "redirect:/admin/chitiet-donhang/" + maDonHang : "redirect:/admin/ql-donhang";
+        }
+
+        if ("Đã hủy".equals(newStatus) && laTrangThaiDangGiao(trangThaiCu)) {
+            redirectAttributes.addFlashAttribute("Error", "Don hang da giao/đang giao, khong the chuyen sang huy. Hay chon 'Khong nhan hang' neu khach khong nhan.");
+            return returnToDetail ? "redirect:/admin/chitiet-donhang/" + maDonHang : "redirect:/admin/ql-donhang";
+        }
+
+        String thongBao = "Cap nhat trang thai don hang thanh cong!";
+        if ("Không nhận hàng".equals(newStatus)) {
+            hoanTraTonKhoTheoHoaDon(maDonHang);
+            thongBao = "Da cap nhat khong nhan hang va tra lai so luong ton kho. Don hang nay khong hoan tien.";
+        } else if ("Đã hủy".equals(newStatus)) {
+            hoanTraTonKhoTheoHoaDon(maDonHang);
+            thongBao = "Da huy don hang va tra lai so luong ton kho.";
+            if ("Đã thanh toán".equals(trangThaiCu)) {
+                thongBao += " Don hang da thanh toan truoc do nen can hoan tien cho khach.";
+            }
+        }
+
         donHang.setTrangThaiTT(newStatus);
         hoaDonRepository.save(donHang);
 
-        redirectAttributes.addFlashAttribute("Success", "Cap nhat trang thai don hang thanh cong!");
+        redirectAttributes.addFlashAttribute("Success", thongBao);
         if (returnToDetail) {
             return "redirect:/admin/chitiet-donhang/" + maDonHang;
         }
@@ -241,6 +279,88 @@ public class AdminController {
     public String quanLyTaiKhoan(Model model) {
         model.addAttribute("QLTK", taiKhoanRepository.findAll());
         return "Admin/AD_QLTK";
+    }
+
+    @GetMapping("/create-km")
+    public String createKhuyenMaiView(Model model) {
+        model.addAttribute("khuyenMai", new KhuyenMai());
+        model.addAttribute("dsHoaDon", hoaDonRepository.findAll());
+        return "Admin/Create_KM";
+    }
+
+    @PostMapping("/create-km")
+    public String createKhuyenMaiPost(@ModelAttribute KhuyenMai khuyenMai, RedirectAttributes redirectAttributes) {
+        try {
+            chuanHoaKhuyenMai(khuyenMai);
+            if (!coGiaTri(khuyenMai.getMaKM())) {
+                khuyenMai.setMaKM(generateMaKM());
+            }
+            if (!ngayKhuyenMaiHopLe(khuyenMai)) {
+                redirectAttributes.addFlashAttribute("Error", "Ngay bat dau phai nho hon hoac bang ngay ket thuc.");
+                return "redirect:/admin/create-km";
+            }
+
+            khuyenMaiRepository.save(khuyenMai);
+            redirectAttributes.addFlashAttribute("Success", "Them khuyen mai thanh cong!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("Error", "Loi them khuyen mai: " + e.getMessage());
+        }
+        return "redirect:/admin/ql-khuyenmai";
+    }
+
+    @GetMapping("/edit-km/{id}")
+    public String editKhuyenMaiView(@PathVariable("id") String id, Model model, RedirectAttributes redirectAttributes) {
+        KhuyenMai khuyenMai = khuyenMaiRepository.findById(id).orElse(null);
+        if (khuyenMai == null) {
+            redirectAttributes.addFlashAttribute("Error", "Khong tim thay khuyen mai!");
+            return "redirect:/admin/ql-khuyenmai";
+        }
+
+        model.addAttribute("khuyenMai", khuyenMai);
+        model.addAttribute("dsHoaDon", hoaDonRepository.findAll());
+        return "Admin/Edit_KM";
+    }
+
+    @PostMapping("/edit-km")
+    public String editKhuyenMaiPost(@ModelAttribute KhuyenMai khuyenMaiMoi, RedirectAttributes redirectAttributes) {
+        try {
+            KhuyenMai khuyenMaiCu = khuyenMaiRepository.findById(khuyenMaiMoi.getMaKM()).orElse(null);
+            if (khuyenMaiCu == null) {
+                redirectAttributes.addFlashAttribute("Error", "Khong tim thay khuyen mai!");
+                return "redirect:/admin/ql-khuyenmai";
+            }
+
+            chuanHoaKhuyenMai(khuyenMaiMoi);
+            if (!ngayKhuyenMaiHopLe(khuyenMaiMoi)) {
+                redirectAttributes.addFlashAttribute("Error", "Ngay bat dau phai nho hon hoac bang ngay ket thuc.");
+                return "redirect:/admin/edit-km/" + khuyenMaiMoi.getMaKM();
+            }
+
+            khuyenMaiCu.setMaHD(khuyenMaiMoi.getMaHD());
+            khuyenMaiCu.setTenKM(khuyenMaiMoi.getTenKM());
+            khuyenMaiCu.setPhanTramKM(khuyenMaiMoi.getPhanTramKM());
+            khuyenMaiCu.setSoTienToiDaKM(khuyenMaiMoi.getSoTienToiDaKM());
+            khuyenMaiCu.setSoTienToiThieuNhanKM(khuyenMaiMoi.getSoTienToiThieuNhanKM());
+            khuyenMaiCu.setNgayBD(khuyenMaiMoi.getNgayBD());
+            khuyenMaiCu.setNgayKT(khuyenMaiMoi.getNgayKT());
+
+            khuyenMaiRepository.save(khuyenMaiCu);
+            redirectAttributes.addFlashAttribute("Success", "Cap nhat khuyen mai thanh cong!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("Error", "Loi cap nhat khuyen mai: " + e.getMessage());
+        }
+        return "redirect:/admin/ql-khuyenmai";
+    }
+
+    @PostMapping("/xoa-khuyenmai/{id}")
+    public String xoaKhuyenMai(@PathVariable("id") String id, RedirectAttributes redirectAttributes) {
+        try {
+            khuyenMaiRepository.deleteById(id);
+            redirectAttributes.addFlashAttribute("Success", "Xoa khuyen mai thanh cong!");
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("Error", "Khuyen mai nay dang duoc lien ket voi hoa don hoac san pham, khong the xoa.");
+        }
+        return "redirect:/admin/ql-khuyenmai";
     }
 
     // ==========================================
@@ -773,7 +893,42 @@ public class AdminController {
         }
 
         String trangThai = hoaDon.getTrangThaiTT().toLowerCase();
-        return trangThai.contains("huy") || trangThai.contains("há»§y");
+        return trangThai.contains("huy")
+                || trangThai.contains("hủy")
+                || trangThai.contains("khong nhan")
+                || trangThai.contains("không nhận");
+    }
+
+    private boolean laTrangThaiKetThuc(String trangThai) {
+        if (trangThai == null) {
+            return false;
+        }
+
+        return "Đã hủy".equals(trangThai)
+                || "Đã nhận hàng".equals(trangThai)
+                || "Không nhận hàng".equals(trangThai);
+    }
+
+    private boolean laTrangThaiDangGiao(String trangThai) {
+        if (trangThai == null) {
+            return false;
+        }
+
+        return "Đang giao".equals(trangThai) || "Đã giao".equals(trangThai);
+    }
+
+    private void hoanTraTonKhoTheoHoaDon(String maHD) {
+        List<ChiTietHoaDon> chiTietHoaDons = chiTietHoaDonRepository.findByMaHD(maHD);
+        for (ChiTietHoaDon chiTiet : chiTietHoaDons) {
+            SanPham sanPham = sanPhamRepository.findById(chiTiet.getMaSP()).orElse(null);
+            if (sanPham == null) {
+                continue;
+            }
+
+            int soLuongTra = parseSoLuong(chiTiet.getSoLuongSP_HD());
+            sanPham.setSoLuongTon((sanPham.getSoLuongTon() != null ? sanPham.getSoLuongTon() : 0) + soLuongTra);
+            sanPhamRepository.save(sanPham);
+        }
     }
 
     private int parseSoLuong(String soLuong) {
@@ -955,8 +1110,93 @@ public class AdminController {
         return value != null && !value.trim().isEmpty();
     }
 
+    private Map<String, KhuyenMai> taoMapKhuyenMaiTheoHoaDon(List<HoaDon> hoaDons) {
+        Map<String, KhuyenMai> result = new HashMap<>();
+        for (HoaDon hoaDon : hoaDons) {
+            if (hoaDon != null && hoaDon.getMaHD() != null) {
+                khuyenMaiRepository.findByMaHD(hoaDon.getMaHD())
+                        .ifPresent(khuyenMai -> result.put(hoaDon.getMaHD(), khuyenMai));
+            }
+        }
+        return result;
+    }
+
+    private Map<String, BigDecimal> taoMapTienGiamTheoHoaDon(List<HoaDon> hoaDons) {
+        Map<String, BigDecimal> result = new HashMap<>();
+        for (HoaDon hoaDon : hoaDons) {
+            if (hoaDon != null && hoaDon.getMaHD() != null) {
+                BigDecimal tongTienHang = tinhTongTienHang(chiTietHoaDonRepository.findByMaHD(hoaDon.getMaHD()));
+                result.put(hoaDon.getMaHD(), tinhTienGiam(tongTienHang, hoaDon.getTongTienHD()));
+            }
+        }
+        return result;
+    }
+
+    private void themThongTinKhuyenMaiHoaDon(Model model, HoaDon hoaDon, List<ChiTietHoaDon> chiTietHoaDons) {
+        BigDecimal tongTienHang = tinhTongTienHang(chiTietHoaDons);
+        BigDecimal tienGiam = tinhTienGiam(tongTienHang, hoaDon != null ? hoaDon.getTongTienHD() : null);
+
+        model.addAttribute("TongTienHang", tongTienHang);
+        model.addAttribute("TienGiam", tienGiam);
+        model.addAttribute("KhuyenMaiDonHang",
+                hoaDon != null && hoaDon.getMaHD() != null
+                        ? khuyenMaiRepository.findByMaHD(hoaDon.getMaHD()).orElse(null)
+                        : null);
+    }
+
+    private BigDecimal tinhTongTienHang(List<ChiTietHoaDon> chiTietHoaDons) {
+        BigDecimal tongTienHang = BigDecimal.ZERO;
+        if (chiTietHoaDons == null) {
+            return tongTienHang;
+        }
+
+        for (ChiTietHoaDon chiTiet : chiTietHoaDons) {
+            if (chiTiet != null && chiTiet.getThanhTien() != null) {
+                tongTienHang = tongTienHang.add(chiTiet.getThanhTien());
+            }
+        }
+        return tongTienHang;
+    }
+
+    private BigDecimal tinhTienGiam(BigDecimal tongTienHang, BigDecimal tongTienHoaDon) {
+        if (tongTienHang == null || tongTienHoaDon == null) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal tienGiam = tongTienHang.subtract(tongTienHoaDon);
+        return tienGiam.compareTo(BigDecimal.ZERO) > 0 ? tienGiam : BigDecimal.ZERO;
+    }
+
     private String chuanHoaChuoi(String value) {
         return coGiaTri(value) ? value.trim() : null;
+    }
+
+    private void chuanHoaKhuyenMai(KhuyenMai khuyenMai) {
+        khuyenMai.setMaKM(chuanHoaChuoi(khuyenMai.getMaKM()));
+        khuyenMai.setMaHD(chuanHoaChuoi(khuyenMai.getMaHD()));
+        khuyenMai.setTenKM(chuanHoaChuoi(khuyenMai.getTenKM()));
+        khuyenMai.setPhanTramKM(chuanHoaChuoi(khuyenMai.getPhanTramKM()));
+    }
+
+    private boolean ngayKhuyenMaiHopLe(KhuyenMai khuyenMai) {
+        return khuyenMai.getNgayBD() == null
+                || khuyenMai.getNgayKT() == null
+                || !khuyenMai.getNgayBD().isAfter(khuyenMai.getNgayKT());
+    }
+
+    private synchronized String generateMaKM() {
+        KhuyenMai last = khuyenMaiRepository.findTopByOrderByMaKMDesc();
+
+        if (last == null || last.getMaKM() == null) {
+            return "KM001";
+        }
+
+        try {
+            int next = Integer.parseInt(last.getMaKM().substring(2)) + 1;
+            return String.format("KM%03d", next);
+        } catch (Exception e) {
+            return "KM" + System.currentTimeMillis() % 1000000;
+        }
     }
 
     private synchronized String generateMaMT() {

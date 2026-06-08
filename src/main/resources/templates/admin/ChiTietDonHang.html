@@ -154,7 +154,7 @@
                 <input type="hidden" name="returnToDetail" value="true" />
                 <select name="newStatus" class="form-select fw-bold">
                   <option
-                    th:each="st : ${ {'Đã đặt', 'Đang giao', 'Đã thanh toán', 'Đã hủy'} }"
+                    th:each="st : ${ {'Đã đặt', 'Đã thanh toán', 'Đang giao', 'Đã giao', 'Đã nhận hàng', 'Không nhận hàng', 'Đã hủy'} }"
                     th:value="${st}"
                     th:text="${st}"
                     th:selected="${donHang.trangThaiTT == st}"
@@ -303,7 +303,27 @@
               </tbody>
               <tfoot>
                 <tr class="fw-bold table-light">
-                  <td colspan="6" class="text-end">Tổng cộng:</td>
+                  <td colspan="6" class="text-end">Tổng tiền hàng:</td>
+                  <td
+                    class="text-end"
+                    th:text="${#numbers.formatDecimal(TongTienHang, 0, 'COMMA', 0, 'POINT') + ' đ'}"
+                  ></td>
+                </tr>
+                <tr class="fw-bold table-light" th:if="${TienGiam != null and TienGiam > 0}">
+                  <td colspan="6" class="text-end">
+                    Khuyến mãi
+                    <span th:if="${KhuyenMaiDonHang != null}">
+                      (<span th:text="${KhuyenMaiDonHang.maKM}"></span>
+                      <span th:if="${KhuyenMaiDonHang.tenKM != null}" th:text="' - ' + ${KhuyenMaiDonHang.tenKM}"></span>)
+                    </span>:
+                  </td>
+                  <td
+                    class="text-end text-success"
+                    th:text="'- ' + ${#numbers.formatDecimal(TienGiam, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+                  ></td>
+                </tr>
+                <tr class="fw-bold table-light">
+                  <td colspan="6" class="text-end">Tổng thanh toán:</td>
                   <td
                     class="text-end text-danger fs-5"
                     th:text="${donHang.tongTienHD != null ? #numbers.formatDecimal(donHang.tongTienHD, 0, 'COMMA', 0, 'POINT') + ' đ' : '0 đ'}"

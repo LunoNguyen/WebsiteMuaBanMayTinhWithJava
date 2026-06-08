@@ -14,6 +14,7 @@ public interface HoaDonRepository extends JpaRepository<HoaDon, String> {
     
     // Tìm danh sách hóa đơn dựa trên Mã Khách Hàng và sắp xếp ngày lập mới nhất lên đầu
     List<HoaDon> findByKhachHang_MaKHOrderByNgayLapDesc(String maKH);
+    List<HoaDon> findAllByOrderByNgayLapDesc();
     HoaDon findFirstByOrderByMaHDDesc();
     @Query("SELECT h FROM HoaDon h WHERE MONTH(h.ngayLap) = :thang AND YEAR(h.ngayLap) = :nam")
     List<HoaDon> findByThangAndNam(@Param("thang") int thang, @Param("nam") int nam);

@@ -1,0 +1,128 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutAdmin :: layout(~{::div.container-fluid})}"
+>
+  <body>
+    <div class="container-fluid px-4">
+      <h1 class="mt-4">Thêm Khuyến mãi mới</h1>
+      <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item">
+          <a th:href="@{/admin/trang-admin}">Tổng quan</a>
+        </li>
+        <li class="breadcrumb-item">
+          <a th:href="@{/admin/ql-khuyenmai}">Danh sách Khuyến mãi</a>
+        </li>
+        <li class="breadcrumb-item active">Thêm mới</li>
+      </ol>
+
+      <div class="card mb-4 shadow-sm" style="max-width: 900px; margin: auto">
+        <div class="card-header bg-primary text-white fw-bold">
+          <i class="fas fa-tag me-1"></i> Nhập thông tin khuyến mãi
+        </div>
+        <div class="card-body">
+          <form
+            th:action="@{/admin/create-km}"
+            method="post"
+            th:object="${khuyenMai}"
+          >
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">Mã khuyến mãi</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  th:field="*{maKM}"
+                  placeholder="Để trống để tự sinh mã"
+                />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">Hóa đơn áp dụng</label>
+                <select class="form-select" th:field="*{maHD}">
+                  <option value="">Không liên kết hóa đơn</option>
+                  <option
+                    th:each="hoaDon : ${dsHoaDon}"
+                    th:value="${hoaDon.maHD}"
+                    th:text="${hoaDon.maHD}"
+                  ></option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold"
+                >Tên khuyến mãi <span class="text-danger">*</span></label
+              >
+              <input
+                type="text"
+                class="form-control"
+                th:field="*{tenKM}"
+                required
+              />
+            </div>
+
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-semibold">Phần trăm KM</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  th:field="*{phanTramKM}"
+                  placeholder="VD: 10%"
+                />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-semibold">Số tiền tối đa</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  th:field="*{soTienToiDaKM}"
+                  min="0"
+                  step="1000"
+                />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-semibold">Đơn tối thiểu</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  th:field="*{soTienToiThieuNhanKM}"
+                  min="0"
+                  step="1000"
+                />
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-4">
+                <label class="form-label fw-semibold">Ngày bắt đầu</label>
+                <input
+                  type="datetime-local"
+                  class="form-control"
+                  th:field="*{ngayBD}"
+                />
+              </div>
+              <div class="col-md-6 mb-4">
+                <label class="form-label fw-semibold">Ngày kết thúc</label>
+                <input
+                  type="datetime-local"
+                  class="form-control"
+                  th:field="*{ngayKT}"
+                />
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+              <a th:href="@{/admin/ql-khuyenmai}" class="btn btn-secondary"
+                >Hủy bỏ</a
+              >
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-1"></i> Lưu khuyến mãi
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -7,6 +7,10 @@ target/
 #local
 application.properties
 
+# Uploaded/product images generated during local use
+src/main/resources/static/Content/HinhAnhPhongVu/*
+!src/main/resources/static/Content/HinhAnhPhongVu/.gitkeep
+
 ### STS ###
 .apt_generated
 .classpath

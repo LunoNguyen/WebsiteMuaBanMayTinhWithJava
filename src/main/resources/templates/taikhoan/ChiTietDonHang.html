@@ -76,7 +76,27 @@
             </tbody>
             <tfoot>
               <tr class="fw-bold">
-                <td colspan="5" class="text-end">TỔNG CỘNG:</td>
+                <td colspan="5" class="text-end">TỔNG TIỀN HÀNG:</td>
+                <td
+                  class="text-end"
+                  th:text="${#numbers.formatDecimal(TongTienHang, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"
+                ></td>
+              </tr>
+              <tr class="fw-bold" th:if="${TienGiam != null and TienGiam > 0}">
+                <td colspan="5" class="text-end">
+                  KHUYẾN MÃI
+                  <span th:if="${KhuyenMaiDonHang != null}">
+                    (<span th:text="${KhuyenMaiDonHang.maKM}"></span>
+                    <span th:if="${KhuyenMaiDonHang.tenKM != null}" th:text="' - ' + ${KhuyenMaiDonHang.tenKM}"></span>)
+                  </span>:
+                </td>
+                <td
+                  class="text-end text-success"
+                  th:text="'- ' + ${#numbers.formatDecimal(TienGiam, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"
+                ></td>
+              </tr>
+              <tr class="fw-bold">
+                <td colspan="5" class="text-end">TỔNG THANH TOÁN:</td>
                 <td
                   class="text-end text-danger"
                   th:text="${#numbers.formatDecimal(donHang.tongTienHD, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'"
@@ -99,6 +119,11 @@
           /*[[${#temporals.format(donHang.ngayLap, 'dd/MM/yyyy HH:mm')}]]*/ "";
         var tongTien =
           /*[[${#numbers.formatDecimal(donHang.tongTienHD, 0, 'COMMA', 0, 'POINT')}]]*/ "0";
+        var tongTienHang =
+          /*[[${#numbers.formatDecimal(TongTienHang, 0, 'COMMA', 0, 'POINT')}]]*/ "0";
+        var tienGiam =
+          /*[[${#numbers.formatDecimal(TienGiam, 0, 'COMMA', 0, 'POINT')}]]*/ "0";
+        var maKhuyenMai = /*[[${KhuyenMaiDonHang != null ? KhuyenMaiDonHang.maKM : ''}]]*/ "";
         var logoPath = "/Content/HinhAnhPhongVu/logo_bieumau.jpg"; // Đường dẫn tĩnh theo Spring Boot
 
         // Trích xuất HTML của bảng chi tiết (clone nội dung phần tbody hiện tại)
@@ -149,6 +174,18 @@
                         ${tbodyContent}
                     </tbody>
                     <tfoot>
+                        <tr style="font-weight: bold; font-size: 15px;">
+                            <td colspan="5" style="border: 1px solid #000; text-align: right; padding: 10px;">TỔNG TIỀN HÀNG (VNĐ):</td>
+                            <td style="border: 1px solid #000; text-align: right; padding: 10px;">${tongTienHang}</td>
+                        </tr>
+                        ${
+                          maKhuyenMai
+                            ? `<tr style="font-weight: bold; font-size: 15px;">
+                                <td colspan="5" style="border: 1px solid #000; text-align: right; padding: 10px;">KHUYẾN MÃI (${maKhuyenMai}):</td>
+                                <td style="border: 1px solid #000; text-align: right; padding: 10px; color: #198754;">- ${tienGiam}</td>
+                              </tr>`
+                            : ""
+                        }
                         <tr style="font-weight: bold; font-size: 15px;">
                             <td colspan="5" style="border: 1px solid #000; text-align: right; padding: 10px;">TỔNG CỘNG THANH TOÁN (VNĐ):</td>
                             <td style="border: 1px solid #000; text-align: right; padding: 10px; font-size: 17px;">${tongTien}</td>

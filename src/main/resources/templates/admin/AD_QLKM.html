@@ -1,0 +1,194 @@
+<!doctype html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{shared/_LayoutAdmin :: layout(~{::div.container-fluid})}"
+>
+  <body>
+    <div class="container-fluid px-4">
+      <h1 class="mt-4">Quản lý Khuyến mãi</h1>
+      <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item">
+          <a th:href="@{/admin/trang-admin}">Tổng quan</a>
+        </li>
+        <li class="breadcrumb-item active">Danh sách Khuyến mãi</li>
+      </ol>
+
+      <div
+        th:if="${Success != null}"
+        class="alert alert-success alert-dismissible fade show"
+        role="alert"
+      >
+        <span th:text="${Success}"></span>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div
+        th:if="${Error != null}"
+        class="alert alert-danger alert-dismissible fade show"
+        role="alert"
+      >
+        <span th:text="${Error}"></span>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+          aria-label="Close"
+        ></button>
+      </div>
+
+      <div class="card mb-4 shadow-sm">
+        <div
+          class="card-header d-flex justify-content-between align-items-center"
+        >
+          <span class="fw-bold"
+            ><i class="fas fa-tags me-1"></i> Danh sách Khuyến mãi</span
+          >
+
+          <a th:href="@{/admin/create-km}" class="btn btn-primary btn-sm">
+            Thêm Khuyến mãi
+          </a>
+        </div>
+        <div class="card-body">
+          <div class="row g-2 mb-3">
+            <div class="col-md-8">
+              <input
+                type="search"
+                id="kmSearch"
+                class="form-control"
+                placeholder="Tìm theo mã, tên, hóa đơn, phần trăm"
+              />
+            </div>
+            <div class="col-md-4">
+              <select id="kmStatus" class="form-select">
+                <option value="">Tất cả trạng thái</option>
+                <option value="active">Đang áp dụng</option>
+                <option value="upcoming">Sắp diễn ra</option>
+                <option value="expired">Đã hết hạn</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table
+              class="table table-bordered table-hover table-striped align-middle"
+            >
+              <thead class="table-dark text-center">
+                <tr>
+                  <th>Mã KM</th>
+                  <th>Tên khuyến mãi</th>
+                  <th>Hóa đơn</th>
+                  <th>Phần trăm</th>
+                  <th>Số tiền tối đa</th>
+                  <th>Đơn tối thiểu</th>
+                  <th>Ngày bắt đầu</th>
+                  <th>Ngày kết thúc</th>
+                  <th>Trạng thái</th>
+                  <th style="width: 170px">Hành động</th>
+                </tr>
+              </thead>
+              <tbody id="kmTableBody">
+                <tr
+                  th:each="item : ${QLKM}"
+                  th:with="now=${T(java.time.LocalDateTime).now()}"
+                  th:data-search="${item.maKM + ' ' + item.tenKM + ' ' + item.maHD + ' ' + item.phanTramKM}"
+                  th:data-status="${item.ngayBD != null and item.ngayBD.isAfter(now) ? 'upcoming' : (item.ngayKT != null and item.ngayKT.isBefore(now) ? 'expired' : 'active')}"
+                >
+                  <td class="text-center fw-bold" th:text="${item.maKM}"></td>
+                  <td th:text="${item.tenKM}"></td>
+                  <td
+                    class="text-center"
+                    th:text="${item.maHD != null ? item.maHD : '-'}"
+                  ></td>
+                  <td class="text-center" th:text="${item.phanTramKM}"></td>
+                  <td
+                    class="text-end"
+                    th:text="${item.soTienToiDaKM != null ? #numbers.formatDecimal(item.soTienToiDaKM, 0, 'COMMA', 0, 'POINT') : '-'}"
+                  ></td>
+                  <td
+                    class="text-end"
+                    th:text="${item.soTienToiThieuNhanKM != null ? #numbers.formatDecimal(item.soTienToiThieuNhanKM, 0, 'COMMA', 0, 'POINT') : '-'}"
+                  ></td>
+                  <td
+                    class="text-center"
+                    th:text="${item.ngayBD != null ? #temporals.format(item.ngayBD, 'dd/MM/yyyy HH:mm') : '-'}"
+                  ></td>
+                  <td
+                    class="text-center"
+                    th:text="${item.ngayKT != null ? #temporals.format(item.ngayKT, 'dd/MM/yyyy HH:mm') : '-'}"
+                  ></td>
+                  <td class="text-center">
+                    <span
+                      th:if="${item.ngayBD != null and item.ngayBD.isAfter(now)}"
+                      class="badge bg-info text-dark"
+                      >Sắp diễn ra</span
+                    >
+                    <span
+                      th:if="${item.ngayKT != null and item.ngayKT.isBefore(now)}"
+                      class="badge bg-secondary"
+                      >Đã hết hạn</span
+                    >
+                    <span
+                      th:if="${(item.ngayBD == null or !item.ngayBD.isAfter(now)) and (item.ngayKT == null or !item.ngayKT.isBefore(now))}"
+                      class="badge bg-success"
+                      >Đang áp dụng</span
+                    >
+                  </td>
+                  <td class="text-center">
+                    <div class="d-flex justify-content-center gap-1">
+                      <a
+                        th:href="@{'/admin/edit-km/' + ${item.maKM}}"
+                        class="btn btn-warning btn-sm text-dark fw-semibold"
+                      >
+                        Sửa
+                      </a>
+
+                      <form
+                        th:action="@{'/admin/xoa-khuyenmai/' + ${item.maKM}}"
+                        method="post"
+                        onsubmit="return confirm('Bạn có chắc chắn muốn xóa khuyến mãi này?');"
+                      >
+                        <button
+                          type="submit"
+                          class="btn btn-danger btn-sm fw-semibold"
+                        >
+                          Xóa
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <script>
+        (() => {
+          const search = document.getElementById("kmSearch");
+          const status = document.getElementById("kmStatus");
+          const rows = Array.from(document.querySelectorAll("#kmTableBody tr"));
+
+          const normalize = (value) => (value || "").toString().toLowerCase();
+          const filterRows = () => {
+            const keyword = normalize(search.value);
+            const selectedStatus = status.value;
+
+            rows.forEach((row) => {
+              row.style.display =
+                normalize(row.dataset.search).includes(keyword) &&
+                (!selectedStatus || row.dataset.status === selectedStatus)
+                  ? ""
+                  : "none";
+            });
+          };
+
+          search.addEventListener("input", filterRows);
+          status.addEventListener("change", filterRows);
+        })();
+      </script>
+    </div>
+  </body>
+</html>

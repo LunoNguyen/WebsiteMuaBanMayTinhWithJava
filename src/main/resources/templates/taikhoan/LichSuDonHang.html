@@ -40,6 +40,8 @@
               <tr>
                 <th class="ps-4">Mã Đơn</th>
                 <th>Ngày đặt</th>
+                <th>Khuyến mãi</th>
+                <th>Giảm giá</th>
                 <th>Tổng tiền</th>
                 <th>Trạng thái</th>
                 <th class="text-center">Thao tác</th>
@@ -49,6 +51,18 @@
               <tr th:each="item : ${listDonHang}">
                 <td class="fw-bold ps-4" th:text="${item.maHD}"></td>
                 <td th:text="${#temporals.format(item.ngayLap, 'dd/MM/yyyy HH:mm')}"></td>
+                <td th:with="km=${KhuyenMaiTheoHD[item.maHD]}">
+                  <span th:if="${km != null}" class="badge bg-info text-dark" th:text="${km.maKM}"></span>
+                  <span th:unless="${km != null}" class="text-muted">-</span>
+                </td>
+                <td th:with="tienGiam=${TienGiamTheoHD[item.maHD]}">
+                  <span
+                    th:if="${tienGiam != null and tienGiam > 0}"
+                    class="text-success fw-bold"
+                    th:text="'- ' + ${#numbers.formatDecimal(tienGiam, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+                  ></span>
+                  <span th:unless="${tienGiam != null and tienGiam > 0}" class="text-muted">-</span>
+                </td>
                 <td class="text-danger fw-bold" th:text="${#numbers.formatDecimal(item.tongTienHD, 0, 'COMMA', 0, 'POINT')} + ' đ'"></td>
                 <td>
                   <span th:if="${#strings.containsIgnoreCase(item.trangThaiTT, 'đặt')}" class="badge bg-primary text-white" th:text="${item.trangThaiTT}"></span>

@@ -833,6 +833,84 @@ public class AdminController {
         return "redirect:nhap-hang";
     }
 
+    // 8B. QUẢN LÝ PHIẾU NHẬP HÀNG
+    @GetMapping("/ql-phieunhap")
+    public String quanLyPhieuNhap(Model model) {
+        // Dùng findAll() thường, sau đó sort trong Java để tránh lỗi Sort với một số repo
+        List<PhieuNhapHang> listPNH = phieuNhapHangRepository.findAll();
+        listPNH.sort((a, b) -> {
+            if (a.getMaPNH() == null) return 1;
+            if (b.getMaPNH() == null) return -1;
+            return b.getMaPNH().compareTo(a.getMaPNH()); // DESC
+        });
+
+        // Map maNCC -> tenNCC để hiển thị tên thay vì mã
+        Map<String, String> tenNCC = new HashMap<>();
+        try {
+            nhaCungCapRepository.findAll().forEach(ncc -> {
+                if (ncc.getMaNCC() != null && ncc.getTenNCC() != null) {
+                    tenNCC.put(ncc.getMaNCC(), ncc.getTenNCC());
+                }
+            });
+        } catch (Exception ignored) {}
+
+        model.addAttribute("listPNH", listPNH);
+        model.addAttribute("TenNCC", tenNCC);
+        return "admin/QL_PhieuNhapHang";
+    }
+
+    @PostMapping("/capnhat-trangthai-phieunhap")
+    public String capNhatTrangThaiPhieuNhap(
+            @RequestParam("maPNH") String maPNH,
+            @RequestParam("newStatus") String newStatus,
+            RedirectAttributes redirectAttributes) {
+        try {
+            PhieuNhapHang phieu = phieuNhapHangRepository.findById(maPNH).orElse(null);
+            if (phieu == null) {
+                redirectAttributes.addFlashAttribute("Error", "Không tìm thấy phiếu: " + maPNH);
+            } else {
+                phieu.setTrangThaiThanhToan(newStatus);
+                phieuNhapHangRepository.save(phieu);
+                redirectAttributes.addFlashAttribute("Success",
+                        "Cập nhật trạng thái phiếu " + maPNH + " thành công!");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("Error", "Lỗi cập nhật: " + e.getMessage());
+        }
+        return "redirect:ql-phieunhap";
+    }
+
+    @PostMapping("/xoa-phieunhap/{id}")
+    public String xoaPhieuNhap(@PathVariable("id") String maPNH,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            if (!phieuNhapHangRepository.existsById(maPNH)) {
+                redirectAttributes.addFlashAttribute("Error", "Không tìm thấy phiếu: " + maPNH);
+                return "redirect:/admin/ql-phieunhap";
+            }
+
+            // Kiểm tra còn sản phẩm nào đang tham chiếu tới phiếu này không
+            long soSP = sanPhamRepository.findAll().stream()
+                    .filter(sp -> maPNH.equals(sp.getMaPNH()))
+                    .count();
+
+            if (soSP > 0) {
+                redirectAttributes.addFlashAttribute("Error",
+                        "Không thể xóa phiếu " + maPNH + " vì còn " + soSP
+                                + " sản phẩm đang thuộc phiếu này!");
+                return "redirect:/admin/ql-phieunhap";
+            }
+
+            phieuNhapHangRepository.deleteById(maPNH);
+            redirectAttributes.addFlashAttribute("Success",
+                    "Đã xóa phiếu " + maPNH + " thành công!");
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("Error", "Lỗi xóa phiếu: " + e.getMessage());
+        }
+        return "redirect:/admin/ql-phieunhap";
+    }
+
     // 9. THAO TÁC XÓA SẢN PHẨM (HỖ TRỢ BẮT LỖI KHÓA NGOẠI)
     @PostMapping("/xoa-sanpham/{id}")
     @Transactional

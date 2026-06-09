@@ -3,7 +3,6 @@ package com.nhom8.DoAnJava.model;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
 @Entity
 @Table(name = "PHIEUNHAPHANG")
 public class PhieuNhapHang {
@@ -33,10 +32,8 @@ public class PhieuNhapHang {
     @Column(name = "TONGCONG_PNH", length = 100)
     private String tongCong;
 
-    // Quan hệ đọc thêm thông tin NCC (không insert)
-    @ManyToOne
-    @JoinColumn(name = "MANCC", insertable = false, updatable = false)
-    private NhaCungCap nhaCungCap;
+    // Bỏ @ManyToOne để tránh lỗi lazy load khi query
+    // Tên NCC được map trong Controller qua nhaCungCapRepository
 
     // ===== Getters & Setters =====
 
@@ -64,6 +61,4 @@ public class PhieuNhapHang {
     public String getTongCong() { return tongCong; }
     public void setTongCong(String tongCong) { this.tongCong = tongCong; }
 
-    public NhaCungCap getNhaCungCap() { return nhaCungCap; }
-    public void setNhaCungCap(NhaCungCap nhaCungCap) { this.nhaCungCap = nhaCungCap; }
 }

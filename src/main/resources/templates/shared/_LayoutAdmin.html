@@ -1,150 +1,156 @@
 <!doctype html>
 <html
-  th:fragment="layout(content)"
-  xmlns:th="http://www.thymeleaf.org"
-  lang="vi"
+        th:fragment="layout(content)"
+        xmlns:th="http://www.thymeleaf.org"
+        lang="vi"
 >
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, shrink-to-fit=no"
-    />
-    <title>Trang Quản Trị</title>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, shrink-to-fit=no"
+  />
+  <title>Trang Quản Trị</title>
 
-    <link th:href="@{/Content/css/styles.css}" rel="stylesheet" />
-    <link th:href="@{/Content/css/custom-skin.css}" rel="stylesheet" />
-    <script
-      src="https://use.fontawesome.com/releases/v6.3.0/js/all.js"
-      crossorigin="anonymous"
-    ></script>
+  <link th:href="@{/Content/css/styles.css}" rel="stylesheet" />
+  <link th:href="@{/Content/css/custom-skin.css}" rel="stylesheet" />
+  <script
+          src="https://use.fontawesome.com/releases/v6.3.0/js/all.js"
+          crossorigin="anonymous"
+  ></script>
 
-    <style>
-      .navbar-nav .nav-link {
-        display: inline-block;
-        padding-right: 1rem;
-        padding-left: 1rem;
-      }
-      #sidebarToggle {
-        display: none !important;
-      }
-    </style>
-  </head>
-  <body class="sb-nav-fixed">
-    <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
-      <a class="navbar-brand ps-3" th:href="@{/admin/trang-admin}"
-        >Trang Quản Trị</a
-      >
+  <style>
+    .navbar-nav .nav-link {
+      display: inline-block;
+      padding-right: 1rem;
+      padding-left: 1rem;
+    }
+    #sidebarToggle {
+      display: none !important;
+    }
+  </style>
+</head>
+<body class="sb-nav-fixed">
+<nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
+  <a class="navbar-brand ps-3" th:href="@{/admin/trang-admin}"
+  >Trang Quản Trị</a
+  >
 
-      <form
-        class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0"
-      ></form>
+  <form
+          class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0"
+  ></form>
 
-      <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
-        <li class="nav-item">
+  <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
+    <li class="nav-item">
           <span class="nav-link text-white">
             Xin chào,
             <strong
-              th:if="${session.UserEmail != null}"
-              th:text="${session.UserEmail}"
+                    th:if="${session.UserEmail != null}"
+                    th:text="${session.UserEmail}"
             ></strong>
             <span th:unless="${session.UserEmail != null}">Admin</span>
           </span>
-        </li>
-        <li class="nav-item">
-          <a
-            class="nav-link text-danger fw-bold"
-            th:href="@{/tai-khoan/dang-xuat}"
-            >Đăng xuất</a
+    </li>
+    <li class="nav-item">
+      <a
+              class="nav-link text-danger fw-bold"
+              th:href="@{/tai-khoan/dang-xuat}"
+      >Đăng xuất</a
+      >
+    </li>
+  </ul>
+</nav>
+
+<div id="layoutSidenav">
+  <div id="layoutSidenav_nav">
+    <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
+      <div class="sb-sidenav-menu">
+        <div class="nav">
+          <div class="sb-sidenav-menu-heading">Hệ thống</div>
+          <a class="nav-link" th:href="@{/admin/trang-admin}">
+            <div class="sb-nav-link-icon">
+              <i class="fas fa-tachometer-alt"></i>
+            </div>
+            Tổng quan
+          </a>
+
+          <div class="sb-sidenav-menu-heading">Quản lý</div>
+          <a class="nav-link" th:href="@{/admin/ql-sanpham}">
+            <div class="sb-nav-link-icon"><i class="fas fa-box"></i></div>
+            Sản phẩm
+          </a>
+          <a class="nav-link" th:href="@{/admin/ql-donhang}">
+            <div class="sb-nav-link-icon">
+              <i class="fas fa-shopping-cart"></i>
+            </div>
+            Đơn hàng
+          </a>
+          <a class="nav-link" th:href="@{/admin/ql-khachhang}">
+            <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
+            Khách hàng
+          </a>
+          <a class="nav-link" th:href="@{/admin/ql-khuyenmai}">
+            <div class="sb-nav-link-icon"><i class="fas fa-tags"></i></div>
+            Khuyến mãi
+          </a>
+          <a class="nav-link" th:href="@{/admin/nhap-hang}">
+            <div class="sb-nav-link-icon">
+              <i class="fas fa-file-import"></i>
+            </div>
+            Nhập Hàng
+          </a>
+          <a class="nav-link" th:href="@{/admin/ql-phieunhap}">
+            <div class="sb-nav-link-icon">
+              <i class="fas fa-file-invoice"></i>
+            </div>
+            Phiếu Nhập
+          </a>
+
+          <div
+                  th:if="${session.AccountType == 'Admin' or session.LOAI_TAIKHOAN == 'Admin'}"
           >
-        </li>
-      </ul>
+            <div class="sb-sidenav-menu-heading">Admin</div>
+            <a class="nav-link" th:href="@{/admin/ql-nhanvien}">
+              <div class="sb-nav-link-icon">
+                <i class="fas fa-user-tie"></i>
+              </div>
+              Nhân viên
+            </a>
+            <a class="nav-link" th:href="@{/admin/ql-taikhoan}">
+              <div class="sb-nav-link-icon">
+                <i class="fas fa-user-shield"></i>
+              </div>
+              Tài khoản
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="sb-sidenav-footer">
+        <div class="small">Phiên bản:</div>
+        Spring Boot Web
+      </div>
     </nav>
+  </div>
 
-    <div id="layoutSidenav">
-      <div id="layoutSidenav_nav">
-        <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
-          <div class="sb-sidenav-menu">
-            <div class="nav">
-              <div class="sb-sidenav-menu-heading">Hệ thống</div>
-              <a class="nav-link" th:href="@{/admin/trang-admin}">
-                <div class="sb-nav-link-icon">
-                  <i class="fas fa-tachometer-alt"></i>
-                </div>
-                Tổng quan
-              </a>
+  <div id="layoutSidenav_content">
+    <main>
+      <div th:replace="${content}"></div>
+    </main>
 
-              <div class="sb-sidenav-menu-heading">Quản lý</div>
-              <a class="nav-link" th:href="@{/admin/ql-sanpham}">
-                <div class="sb-nav-link-icon"><i class="fas fa-box"></i></div>
-                Sản phẩm
-              </a>
-              <a class="nav-link" th:href="@{/admin/ql-donhang}">
-                <div class="sb-nav-link-icon">
-                  <i class="fas fa-shopping-cart"></i>
-                </div>
-                Đơn hàng
-              </a>
-              <a class="nav-link" th:href="@{/admin/ql-khachhang}">
-                <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
-                Khách hàng
-              </a>
-              <a class="nav-link" th:href="@{/admin/ql-khuyenmai}">
-                <div class="sb-nav-link-icon"><i class="fas fa-tags"></i></div>
-                Khuyến mãi
-              </a>
-              <a class="nav-link" th:href="@{/admin/nhap-hang}">
-                <div class="sb-nav-link-icon">
-                  <i class="fas fa-file-import"></i>
-                </div>
-                Nhập Hàng
-              </a>
-
-              <div
-                th:if="${session.AccountType == 'Admin' or session.LOAI_TAIKHOAN == 'Admin'}"
-              >
-                <div class="sb-sidenav-menu-heading">Admin</div>
-                <a class="nav-link" th:href="@{/admin/ql-nhanvien}">
-                  <div class="sb-nav-link-icon">
-                    <i class="fas fa-user-tie"></i>
-                  </div>
-                  Nhân viên
-                </a>
-                <a class="nav-link" th:href="@{/admin/ql-taikhoan}">
-                  <div class="sb-nav-link-icon">
-                    <i class="fas fa-user-shield"></i>
-                  </div>
-                  Tài khoản
-                </a>
-              </div>
-            </div>
+    <footer class="py-4 bg-light mt-auto">
+      <div class="container-fluid px-4">
+        <div
+                class="d-flex align-items-center justify-content-between small"
+        >
+          <div class="text-muted">
+            Copyright &copy; Website Mua Bán Máy Tính 2026
           </div>
-
-          <div class="sb-sidenav-footer">
-            <div class="small">Phiên bản:</div>
-            Spring Boot Web
-          </div>
-        </nav>
+        </div>
       </div>
-
-      <div id="layoutSidenav_content">
-        <main>
-          <div th:replace="${content}"></div>
-        </main>
-
-        <footer class="py-4 bg-light mt-auto">
-          <div class="container-fluid px-4">
-            <div
-              class="d-flex align-items-center justify-content-between small"
-            >
-              <div class="text-muted">
-                Copyright &copy; Website Mua Bán Máy Tính 2026
-              </div>
-            </div>
-          </div>
-        </footer>
-      </div>
-    </div>
-  </body>
+    </footer>
+  </div>
+</div>
+</body>
 </html>

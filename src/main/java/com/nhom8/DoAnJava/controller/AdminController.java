@@ -62,9 +62,11 @@ import jakarta.servlet.http.HttpSession;
 @RequestMapping("/admin")
 public class AdminController {
 
-    private static final Path UPLOAD_DIR = Paths.get("src/main/resources/static/Content/HinhAnhPhongVu");
+    // Ảnh sẽ lưu trực tiếp vào thư mục tên "uploads/HinhAnhPhongVu" nằm ở ngay gốc dự án của bạn
+    private static final Path UPLOAD_DIR = Paths.get("uploads/HinhAnhPhongVu");
 
     @Autowired private KhachHangRepository khachHangRepository;
+
     @Autowired private NhanVienRepository nhanVienRepository;
     @Autowired private HoaDonRepository hoaDonRepository;
     @Autowired private TaiKhoanRepository taiKhoanRepository;
@@ -722,10 +724,29 @@ public class AdminController {
         model.addAttribute("moTa", new MoTa());
         model.addAttribute("MaSPSapTao", adminService.generateMaSP());
 
-        // Đổ dữ liệu ra các ô chọn Dropdown
         model.addAttribute("dsLoai", loaiSanPhamRepository.findAll());
         model.addAttribute("dsNSX", nhaSanXuatRepository.findAll());
         model.addAttribute("dsNCC", nhaCungCapRepository.findAll());
+
+        List<SanPham> dsSanPham = sanPhamRepository.findAll();
+        model.addAttribute("dsSanPhamHienCo", dsSanPham);
+        model.addAttribute("dsMoTaHienCo", moTaRepository.findAll());
+
+        // --- ĐOẠN SỬA: Gom tên ảnh thực tế theo từng Mã Sản Phẩm ---
+        Map<String, String> mapAnhSanPham = new HashMap<>();
+        for (SanPham sp : dsSanPham) {
+            // Tìm danh sách ảnh của sản phẩm này trong DB
+            var dsAnh = danhSachAnhRepository.findBySanPham_MaSP(sp.getMaSP());
+            if (dsAnh != null && !dsAnh.isEmpty()) {
+                // Lấy cái ảnh đầu tiên của sản phẩm đó
+                mapAnhSanPham.put(sp.getMaSP(), dsAnh.get(0).getTenAnh());
+            } else {
+                mapAnhSanPham.put(sp.getMaSP(), ""); // Không có ảnh
+            }
+        }
+        model.addAttribute("mapAnhSanPham", mapAnhSanPham);
+        // -----------------------------------------------------------
+
         return "admin/NhapHang";
     }
 
@@ -759,11 +780,16 @@ public class AdminController {
     }
 
     // CÁCH 1: XỬ LÝ NHẬP THỦ CÔNG & THÊM NCC MỚI NẾU TÍCH CHỌN
+
     @PostMapping("/nhap-thu-cong")
     @Transactional
     public String xuLyNhapThuCong(@ModelAttribute SanPham sp,
                                   @ModelAttribute MoTa mt,
                                   @RequestParam("fileAnh") MultipartFile fileAnh,
+                                  // --- THÊM 2 THAM SỐ NÀY ĐỂ NHẬN BIẾT SẢN PHẨM CŨ ---
+                                  @RequestParam(value = "isOldSP", defaultValue = "false") boolean isOldSP,
+                                  @RequestParam(value = "maSPDaCo", required = false) String maSPDaCo,
+                                  // ----------------------------------------------------
                                   @RequestParam(value = "isNewNCC", defaultValue = "false") boolean isNewNCC,
                                   @RequestParam(value = "tenNCCMoi", required = false) String tenNCCMoi,
                                   @RequestParam(value = "sdtNCCMoi", required = false) String sdtNCCMoi,
@@ -772,27 +798,94 @@ public class AdminController {
                                   @RequestParam(value = "chietKhau", defaultValue = "0") BigDecimal chietKhauPct,
                                   RedirectAttributes redirectAttributes) {
         try {
-            // Nếu người dùng chọn nhập Nhà Cung Cấp mới
-            if (isNewNCC && tenNCCMoi != null && !tenNCCMoi.trim().isEmpty()) {
-                NhaCungCap nccMoi = new NhaCungCap();
-                String newMaNCC = generateMaNCC();
+            // TRƯỜNG HỢP 1: NẾU NGƯỜI DÙNG CHỌN SẢN PHẨM ĐÃ CÓ SẴN (CỘNG DỒN SỐ LƯỢNG)
+            if (isOldSP && maSPDaCo != null && !maSPDaCo.trim().isEmpty()) {
+                SanPham spHienTai = sanPhamRepository.findById(maSPDaCo)
+                        .orElseThrow(() -> new Exception("Không tìm thấy sản phẩm trong kho!"));
 
-                nccMoi.setMaNCC(newMaNCC);
-                nccMoi.setTenNCC(tenNCCMoi.trim());
-                nccMoi.setSdtNCC(sdtNCCMoi != null ? sdtNCCMoi.trim() : "");
-                nccMoi.setDiaChiNCC(diaChiNCCMoi != null ? diaChiNCCMoi.trim() : "");
+                // Cập nhật giá bán mới nếu người dùng điền giá mới trên form
+                if (sp.getDonGiaSP() != null) {
+                    spHienTai.setDonGiaSP(sp.getDonGiaSP());
+                }
 
-                // Lưu NCC mới vào DB trước
-                nhaCungCapRepository.save(nccMoi);
+                // Cộng dồn số lượng nhập thêm vào số lượng đang có sẵn trong DB
+                int soLuongNhapThem = (sp.getSoLuongTon() != null) ? sp.getSoLuongTon() : 0;
+                int soLuongCu = (spHienTai.getSoLuongTon() != null) ? spHienTai.getSoLuongTon() : 0;
+                spHienTai.setSoLuongTon(soLuongCu + soLuongNhapThem);
 
-                // Gán mã NCC vừa tạo cho đối tượng sản phẩm sắp lưu
-                sp.setMaNCC(newMaNCC);
+                // Lưu cập nhật sản phẩm cũ vào database
+                sanPhamRepository.save(spHienTai);
+
+                // --- ĐOẠN XỬ LÝ UPLOAD ẢNH CHO SẢN PHẨM CŨ ---
+                // Nếu người dùng có chọn file ảnh mới khi nhập kho mặt hàng cũ này
+                if (fileAnh != null && !fileAnh.isEmpty()) {
+                    // Tạo thư mục ngoài nếu chưa tồn tại
+                    Files.createDirectories(UPLOAD_DIR);
+
+                    // Đếm xem sản phẩm này hiện đã có bao nhiêu ảnh trong DB để tăng số index sau đuôi ảnh
+                    int index = danhSachAnhRepository.findBySanPham_MaSP(spHienTai.getMaSP()).size() + 1;
+
+                    // Quy chuẩn đặt tên file ảnh (Ví dụ: SP001_02.jpg)
+                    String tenAnhMoi = spHienTai.getMaSP() + "_" + String.format("%02d", index) + layDuoiFile(fileAnh.getOriginalFilename());
+                    Path filePath = UPLOAD_DIR.resolve(tenAnhMoi);
+
+                    // Ghi file vật lý ra thư mục ngoài uploads/HinhAnhPhongVu
+                    Files.write(filePath, fileAnh.getBytes());
+
+                    // Lưu thông tin bản ghi vào bảng DANHSACHANH trong DB
+                    DanhSachAnh anhEntity = new DanhSachAnh();
+                    anhEntity.setMaDsa(generateMaDSA());
+                    anhEntity.setSanPham(spHienTai);
+                    anhEntity.setTenAnh(tenAnhMoi);
+                    danhSachAnhRepository.save(anhEntity);
+                }
+                // ----------------------------------------------
+
+                // Đồng bộ lại thông tin của đối tượng 'sp' để đoạn code tính tiền phiếu nhập bên dưới chạy chính xác
+                sp.setMaNCC(spHienTai.getMaNCC());
+                sp.setDonGiaSP(spHienTai.getDonGiaSP());
+                sp.setSoLuongTon(soLuongNhapThem); // Chỉ lấy số lượng mới nhập để tính tiền phiếu nhập
+
+            } else {
+                // TRƯỜNG HỢP 2: THÊM MỚI TOÀN BỘ (ĐÂY LÀ CODE CŨ CỦA BẠN)
+                if (isNewNCC && tenNCCMoi != null && !tenNCCMoi.trim().isEmpty()) {
+                    NhaCungCap nccMoi = new NhaCungCap();
+                    String newMaNCC = generateMaNCC();
+
+                    nccMoi.setMaNCC(newMaNCC);
+                    nccMoi.setTenNCC(tenNCCMoi.trim());
+                    nccMoi.setSdtNCC(sdtNCCMoi != null ? sdtNCCMoi.trim() : "");
+                    nccMoi.setDiaChiNCC(diaChiNCCMoi != null ? diaChiNCCMoi.trim() : "");
+
+                    nhaCungCapRepository.save(nccMoi);
+                    sp.setMaNCC(newMaNCC);
+                }
+
+                // Sửa lại đoạn upload ảnh hàng mới thọc thẳng ra folder "uploads/" vật lý ngoài máy tính
+                String maSPMoi = adminService.generateMaSP();
+                sp.setMaSP(maSPMoi);
+                sp.setNgayCN(LocalDateTime.now());
+                sanPhamRepository.save(sp);
+
+                // Lưu mô tả cấu hình sản phẩm mới
+                luuMoTaNeuCoDuLieu(sp, mt);
+
+                // Xử lý upload ảnh cho sản phẩm mới vào folder vật lý ngoài
+                if (fileAnh != null && !fileAnh.isEmpty()) {
+                    Files.createDirectories(UPLOAD_DIR);
+                    String tenAnhMoi = maSPMoi + "_01" + layDuoiFile(fileAnh.getOriginalFilename());
+                    Path filePath = UPLOAD_DIR.resolve(tenAnhMoi);
+                    Files.write(filePath, fileAnh.getBytes());
+
+                    DanhSachAnh anhEntity = new DanhSachAnh();
+                    anhEntity.setMaDsa(generateMaDSA());
+                    anhEntity.setSanPham(sp);
+                    anhEntity.setTenAnh(tenAnhMoi);
+                    danhSachAnhRepository.save(anhEntity);
+                }
             }
 
-            // Lưu sản phẩm, mô tả, hình ảnh
-            adminService.nhapHangThuCong(sp, mt, fileAnh);
-
-            // ===== TẠO PHIẾU NHẬP HÀNG TỰ ĐỘNG =====
+            // ===== TẠO PHIẾU NHẬP HÀNG TỰ ĐỘNG (ÁP DỤNG CHO CẢ HÀNG MỚI LẪN HÀNG CŨ) =====
             String maNCC = sp.getMaNCC();
             if (maNCC != null && !maNCC.trim().isEmpty()) {
                 LocalDateTime now = LocalDateTime.now();
@@ -823,14 +916,14 @@ public class AdminController {
 
                 phieuNhapHangRepository.save(phieu);
             }
-            // =========================================
+            // ============================================================================
 
             redirectAttributes.addFlashAttribute("Success",
-                    "Thêm sản phẩm thành công! Phiếu nhập hàng đã được tạo tự động.");
+                    "Nhập hàng thành công! Dữ liệu kho, hình ảnh và phiếu nhập đã được đồng bộ thời gian thực.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("Error", "Lỗi nhập hàng: " + e.getMessage());
         }
-        return "redirect:nhap-hang";
+        return "redirect:/admin/ql-phieunhap";
     }
 
     // 8B. QUẢN LÝ PHIẾU NHẬP HÀNG

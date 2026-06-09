@@ -48,8 +48,41 @@
                   method="post"
                   enctype="multipart/form-data"
           >
+            <div class="mb-4 p-3 border border-primary rounded bg-light">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="isOldSP" name="isOldSP" value="true" onchange="toggleProductMode()">
+                <label class="form-check-label fw-bold text-primary" for="isOldSP">🔄 Nhập Thêm Số Lượng Cho Sản Phẩm Đã Có Sẵn</label>
+              </div>
+
+              <div id="oldSPFields" class="mt-3" style="display: none;">
+                <label class="form-label fw-bold small text-danger">Chọn sản phẩm muốn nhập thêm <span class="text-danger">*</span></label>
+                <select id="selectOldSP" name="maSPDaCo" class="form-select" onchange="fillProductDetails()">
+                  <option value="">-- Chọn sản phẩm hiện có --</option>
+                  <th:block th:each="spHienCo : ${dsSanPhamHienCo}">
+                    <option th:each="mtHienCo : ${dsMoTaHienCo}"
+                            th:if="${spHienCo.maSP == mtHienCo.maSP}"
+                            th:value="${spHienCo.maSP}"
+                            th:text="${spHienCo.maSP + ' - ' + spHienCo.tenSP}"
+                            th:data-ten="${spHienCo.tenSP}"
+                            th:data-gia="${spHienCo.donGiaSP}"
+                            th:data-donvi="${spHienCo.donVT}"
+                            th:data-loai="${spHienCo.maLoai}"
+                            th:data-nsx="${spHienCo.maNSX}"
+                            th:data-ncc="${spHienCo.maNCC}"
+                            th:data-cpu="${mtHienCo.cpu}"
+                            th:data-ram="${mtHienCo.ram}"
+                            th:data-rom="${mtHienCo.rom}"
+                            th:data-vga="${mtHienCo.vga}"
+                            th:data-manhinh="${mtHienCo.manHinh}"
+                            th:data-khac="${mtHienCo.khac}"
+                            th:data-anh="${mapAnhSanPham[spHienCo.maSP]}">
+                    </option>
+                  </th:block>
+                </select>
+              </div>
+            </div>
             <h6 class="text-primary fw-bold border-bottom pb-2 mb-3">
-              1. Thông tin cơ bản (Bảng SANPHAM)
+              1. Thông tin cơ bản
             </h6>
             <div class="row mb-3">
               <div class="col-md-8">
@@ -86,7 +119,7 @@
                 />
               </div>
               <div class="col-md-6">
-                <label class="form-label fw-bold small">Số lượng tồn</label>
+                <label class="form-label fw-bold small">Số lượng nhập</label>
                 <input
                         type="number"
                         name="soLuongTon"
@@ -132,7 +165,6 @@
               </div>
             </div>
 
-            <!-- Ô checkbox tích chọn Nhà Cung Cấp mới -->
             <div class="mb-3">
               <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" id="isNewNCC" name="isNewNCC" value="true" onchange="toggleNewNCCFields()">
@@ -140,7 +172,6 @@
               </div>
             </div>
 
-            <!-- Form nhập thông tin Nhà Cung Cấp mới (Ẩn mặc định) -->
             <div id="newNCCFields" class="p-3 mb-3 border border-success rounded bg-light" style="display: none;">
               <h6 class="text-success fw-bold border-bottom pb-1 mb-2">Thông tin Nhà Cung Cấp mới</h6>
               <div class="row">
@@ -160,7 +191,7 @@
             </div>
 
             <h6 class="text-primary fw-bold border-bottom pb-2 mb-3 mt-4">
-              2. Cấu hình chi tiết (Bảng MOTA)
+              2. Cấu hình chi tiết
             </h6>
             <div class="row mb-2">
               <div class="col-md-6 mb-2">
@@ -220,7 +251,7 @@
             </div>
 
             <h6 class="text-primary fw-bold border-bottom pb-2 mb-3 mt-4">
-              3. Hình ảnh (Bảng DANHSACHANH)
+              3. Hình ảnh
             </h6>
             <div class="mb-3">
               <input
@@ -229,6 +260,10 @@
                       class="form-control"
                       accept="image/*"
               />
+              <div id="oldImagePreview" class="mt-2" style="display: none;">
+                <label class="small text-muted d-block mb-1">Ảnh hiện tại của sản phẩm:</label>
+                <img id="imgPreview" src="" alt="Ảnh sản phẩm" class="img-thumbnail" style="max-height: 150px;">
+              </div>
             </div>
 
             <h6 class="text-primary fw-bold border-bottom pb-2 mb-3 mt-4">
@@ -287,7 +322,6 @@
     </div>
   </div>
 
-  <!-- SCRIPT -->
   <script>
     function tinhLaiTong() {
       const gia = parseFloat(document.querySelector('[name="donGiaSP"]').value) || 0;
@@ -309,6 +343,7 @@
       document.querySelector('[name="donGiaSP"]').addEventListener('input', tinhLaiTong);
       document.querySelector('[name="soLuongTon"]').addEventListener('input', tinhLaiTong);
     });
+
     function toggleNewNCCFields() {
       const checkbox = document.getElementById("isNewNCC");
       const newFieldsDiv = document.getElementById("newNCCFields");
@@ -334,7 +369,112 @@
         selectNCC.required = true;
       }
     }
+
+    function toggleProductMode() {
+      const isOldSP = document.getElementById("isOldSP").checked;
+      const oldSPFields = document.getElementById("oldSPFields");
+      const selectOldSP = document.getElementById("selectOldSP");
+
+      const tenSP = document.querySelector('[name="tenSP"]');
+      const donVT = document.querySelector('[name="donVT"]');
+      const maLoai = document.querySelector('[name="maLoai"]');
+      const maNSX = document.querySelector('[name="maNSX"]');
+      const selectNCC = document.getElementById("selectNCC");
+      const isNewNCC = document.getElementById("isNewNCC");
+
+      const cpu = document.querySelector('[name="cpu"]');
+      const ram = document.querySelector('[name="ram"]');
+      const rom = document.querySelector('[name="rom"]');
+      const vga = document.querySelector('[name="vga"]');
+      const manHinh = document.querySelector('[name="manHinh"]');
+      const khac = document.querySelector('[name="khac"]');
+
+      if (isOldSP) {
+        oldSPFields.style.display = "block";
+        selectOldSP.required = true;
+
+        // Khóa các trường thông tin cơ bản không cho sửa
+        tenSP.readOnly = true;
+        donVT.readOnly = true;
+        maLoai.disabled = true;
+        maNSX.disabled = true;
+        selectNCC.disabled = true;
+        isNewNCC.disabled = true;
+
+        // Khóa luôn phần nhập mô tả cấu hình chi tiết
+        if(cpu) cpu.readOnly = true;
+        if(ram) ram.readOnly = true;
+        if(rom) rom.readOnly = true;
+        if(vga) vga.readOnly = true;
+        if(manHinh) manHinh.readOnly = true;
+        if(khac) khac.readOnly = true;
+      } else {
+        document.getElementById("oldImagePreview").style.display = "none";
+        document.getElementById("imgPreview").src = "";
+        oldSPFields.style.display = "none";
+        selectOldSP.required = false;
+        selectOldSP.value = "";
+
+        // Mở khóa lại toàn bộ form để nhập sản phẩm mới
+        tenSP.readOnly = false; tenSP.value = "";
+        donVT.readOnly = false; donVT.value = "";
+        maLoai.disabled = false; maLoai.value = "";
+        maNSX.disabled = false; maNSX.value = "";
+        selectNCC.disabled = false; selectNCC.value = "";
+        isNewNCC.disabled = false;
+
+        if(cpu) { cpu.readOnly = false; cpu.value = ""; }
+        if(ram) { ram.readOnly = false; ram.value = ""; }
+        if(rom) { rom.readOnly = false; rom.value = ""; }
+        if(vga) { vga.readOnly = false; vga.value = ""; }
+        if(manHinh) { manHinh.readOnly = false; manHinh.value = ""; }
+        if(khac) { khac.readOnly = false; khac.value = ""; }
+
+        document.querySelector('[name="donGiaSP"]').value = "";
+        document.querySelector('[name="soLuongTon"]').value = "";
+        tinhLaiTong();
+      }
+    }
+
+    function fillProductDetails() {
+      const select = document.getElementById("selectOldSP");
+      const selectedOption = select.options[select.selectedIndex];
+
+      if (!selectedOption.value) return;
+
+      // Đổ thông tin cơ bản
+      document.querySelector('[name="tenSP"]').value = selectedOption.getAttribute('data-ten');
+      document.querySelector('[name="donVT"]').value = selectedOption.getAttribute('data-donvi');
+      document.querySelector('[name="donGiaSP"]').value = selectedOption.getAttribute('data-gia');
+      document.querySelector('[name="maLoai"]').value = selectedOption.getAttribute('data-loai');
+      document.querySelector('[name="maNSX"]').value = selectedOption.getAttribute('data-nsx');
+      document.getElementById("selectNCC").value = selectedOption.getAttribute('data-ncc');
+
+      // Đổ thông tin mô tả chi tiết phần cứng cố định
+      const cpu = document.querySelector('[name="cpu"]');
+      const ram = document.querySelector('[name="ram"]');
+      const rom = document.querySelector('[name="rom"]');
+      const vga = document.querySelector('[name="vga"]');
+      const manHinh = document.querySelector('[name="manHinh"]');
+      const khac = document.querySelector('[name="khac"]');
+
+      if(cpu) cpu.value = selectedOption.getAttribute('data-cpu') || "";
+      if(ram) ram.value = selectedOption.getAttribute('data-ram') || "";
+      if(rom) rom.value = selectedOption.getAttribute('data-rom') || "";
+      if(vga) vga.value = selectedOption.getAttribute('data-vga') || "";
+      if(manHinh) manHinh.value = selectedOption.getAttribute('data-manhinh') || "";
+      if(khac) khac.value = selectedOption.getAttribute('data-khac') || "";
+
+      tinhLaiTong();
+      const tenAnh = selectedOption.getAttribute('data-anh');
+      if (tenAnh) {
+        // Ghép với đường dẫn thư mục chứa ảnh tĩnh của bạn (ví dụ /Content/HinhAnhPhongVu/)
+        document.getElementById("imgPreview").src = "/Content/HinhAnhPhongVu/" + tenAnh;
+        document.getElementById("oldImagePreview").style.display = "block";
+      } else {
+        document.getElementById("oldImagePreview").style.display = "none";
+      }
+    }
   </script>
-</div> <!-- Thẻ đóng của container-fluid -->
-</body>
+</div> </body>
 </html>

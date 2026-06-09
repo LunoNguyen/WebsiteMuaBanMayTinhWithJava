@@ -13,7 +13,6 @@
         <li class="breadcrumb-item active">Quản lý Phiếu Nhập Hàng</li>
     </ol>
 
-    <!-- Thông báo -->
     <div th:if="${Success != null}" class="alert alert-success alert-dismissible fade show">
         <strong>Thành công!</strong> <span th:text="${Success}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -29,7 +28,6 @@
         </div>
         <div class="card-body">
 
-            <!-- Bộ lọc -->
             <div class="row g-2 mb-3">
                 <div class="col-lg-3 col-md-6">
                     <input type="search" id="pnhSearch" class="form-control"
@@ -56,7 +54,6 @@
                 </div>
             </div>
 
-            <!-- Bảng dữ liệu -->
             <div class="table-responsive">
                 <table class="table table-striped table-bordered align-middle">
                     <thead class="table-dark text-center">
@@ -100,18 +97,16 @@
                         </td>
 
                         <td class="text-end fw-bold text-success">
-                            <span th:if="${item.tongCong != null}" th:text="${item.tongCong} + ' đ'"></span>
+                            <span th:if="${item.tongCong != null}"
+                                  th:text="${#numbers.formatDecimal(item.tongCong, 1, 'COMMA', 0, 'POINT')} + ' đ'"></span>
                             <span th:unless="${item.tongCong != null}">-</span>
                         </td>
 
-                        <!-- Trạng thái & cập nhật -->
                         <td class="text-center">
-                            <!-- Nếu đã hủy thì chỉ hiện badge -->
                             <th:block th:if="${item.trangThaiThanhToan == 'Đã hủy'}">
                                 <span class="badge bg-danger fs-6">Đã hủy</span>
                             </th:block>
 
-                            <!-- Còn lại cho phép cập nhật -->
                             <th:block th:unless="${item.trangThaiThanhToan == 'Đã hủy'}">
                                 <form th:action="@{/admin/capnhat-trangthai-phieunhap}" method="post"
                                       class="d-flex justify-content-center">
@@ -131,7 +126,6 @@
                             </th:block>
                         </td>
 
-                        <!-- Nút xóa -->
                         <td class="text-center">
                             <form th:action="@{/admin/xoa-phieunhap/{id}(id=${item.maPNH})}"
                                   method="post"
@@ -143,7 +137,6 @@
                         </td>
                     </tr>
 
-                    <!-- Nếu không có dữ liệu -->
                     <tr th:if="${#lists.isEmpty(listPNH)}">
                         <td colspan="8" class="text-center text-muted py-4">
                             <i class="fas fa-inbox me-2"></i>Chưa có phiếu nhập hàng nào.
@@ -156,7 +149,6 @@
         </div>
     </div>
 
-    <!-- Script lọc client-side -->
     <script>
         (() => {
             const search   = document.getElementById("pnhSearch");

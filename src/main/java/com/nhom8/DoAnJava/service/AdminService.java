@@ -169,30 +169,49 @@ public class AdminService {
         try {
             LocalDateTime ngayCN = LocalDateTime.now().withNano(0);
 
-            CapNhatGia capNhatGia = new CapNhatGia();
-            capNhatGia.setNgayCN(ngayCN);
-            capNhatGia.setDonGiaCN(sp.getDonGiaSP());
+            // Kiểm tra sản phẩm đã tồn tại chưa (theo tên, không phân biệt hoa thường)
+            Optional<SanPham> spCu = sanPhamRepository.findByTenSPIgnoreCase(sp.getTenSP().trim());
 
-            capNhatGiaRepository.saveAndFlush(capNhatGia);
+            if (spCu.isPresent()) {
+                // Sản phẩm đã có → chỉ tăng số lượng tồn + cập nhật giá nếu có
+                SanPham spHienTai = spCu.get();
+                int soLuongNhapThem = (sp.getSoLuongTon() != null ? sp.getSoLuongTon() : 0);
+                spHienTai.setSoLuongTon((spHienTai.getSoLuongTon() != null ? spHienTai.getSoLuongTon() : 0) + soLuongNhapThem);
+                spHienTai.setDonGiaSP(sp.getDonGiaSP());
+                spHienTai.setNgayCN(ngayCN);
 
-            String maSP = generateMaSP();
-            sp.setMaSP(maSP);
-            sp.setNgayCN(ngayCN);
+                CapNhatGia capNhatGia = new CapNhatGia();
+                capNhatGia.setNgayCN(ngayCN);
+                capNhatGia.setDonGiaCN(sp.getDonGiaSP());
+                capNhatGiaRepository.saveAndFlush(capNhatGia);
 
-            if (sp.getSoLuongTon() == null) {
-                sp.setSoLuongTon(0);
-            }
-            if (sp.getDonVT() == null || sp.getDonVT().trim().isEmpty()) {
-                sp.setDonVT("Cái");
-            }
+                sanPhamRepository.save(spHienTai);
+            } else {
+                // Sản phẩm mới hoàn toàn → tạo mới
+                CapNhatGia capNhatGia = new CapNhatGia();
+                capNhatGia.setNgayCN(ngayCN);
+                capNhatGia.setDonGiaCN(sp.getDonGiaSP());
+                capNhatGiaRepository.saveAndFlush(capNhatGia);
 
-            sanPhamRepository.save(sp);
+                String maSP = generateMaSP();
+                sp.setMaSP(maSP);
+                sp.setNgayCN(ngayCN);
 
-            if (mt != null && mt.getCpu() != null && !mt.getCpu().trim().isEmpty()) {
-                String maMT = generateMaMoTa();
-                mt.setMaMT(maMT);
-                mt.setMaSP(maSP);
-                moTaRepository.save(mt);
+                if (sp.getSoLuongTon() == null) {
+                    sp.setSoLuongTon(0);
+                }
+                if (sp.getDonVT() == null || sp.getDonVT().trim().isEmpty()) {
+                    sp.setDonVT("Cái");
+                }
+
+                sanPhamRepository.save(sp);
+
+                if (mt != null && mt.getCpu() != null && !mt.getCpu().trim().isEmpty()) {
+                    String maMT = generateMaMoTa();
+                    mt.setMaMT(maMT);
+                    mt.setMaSP(maSP);
+                    moTaRepository.save(mt);
+                }
             }
 
         } catch (Exception e) {

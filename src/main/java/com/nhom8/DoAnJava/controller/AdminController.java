@@ -35,8 +35,9 @@ import com.nhom8.DoAnJava.model.KhuyenMai;
 import com.nhom8.DoAnJava.model.MoTa;
 import com.nhom8.DoAnJava.model.NhaCungCap;
 import com.nhom8.DoAnJava.model.NhanVien;
+import com.nhom8.DoAnJava.model.PhieuNhapHang;
 import com.nhom8.DoAnJava.model.SanPham;
-import com.nhom8.DoAnJava.model.TaiKhoan; // Import thêm Model NhaCungCap
+import com.nhom8.DoAnJava.model.TaiKhoan;
 import com.nhom8.DoAnJava.repository.CapNhatGiaRepository;
 import com.nhom8.DoAnJava.repository.ChiTietHoaDonRepository;
 import com.nhom8.DoAnJava.repository.ChucVuRepository;
@@ -50,6 +51,7 @@ import com.nhom8.DoAnJava.repository.MoTaRepository;
 import com.nhom8.DoAnJava.repository.NhaCungCapRepository;
 import com.nhom8.DoAnJava.repository.NhaSanXuatRepository;
 import com.nhom8.DoAnJava.repository.NhanVienRepository;
+import com.nhom8.DoAnJava.repository.PhieuNhapHangRepository;
 import com.nhom8.DoAnJava.repository.SanPhamRepository;
 import com.nhom8.DoAnJava.repository.TaiKhoanRepository;
 import com.nhom8.DoAnJava.service.AdminService;
@@ -62,7 +64,7 @@ public class AdminController {
 
     private static final Path UPLOAD_DIR = Paths.get("src/main/resources/static/Content/HinhAnhPhongVu");
 
-    @Autowired private KhachHangRepository khachHangRepository; 
+    @Autowired private KhachHangRepository khachHangRepository;
     @Autowired private NhanVienRepository nhanVienRepository;
     @Autowired private HoaDonRepository hoaDonRepository;
     @Autowired private TaiKhoanRepository taiKhoanRepository;
@@ -78,6 +80,7 @@ public class AdminController {
     @Autowired private MoTaRepository moTaRepository;
     @Autowired private GioHangRepository gioHangRepository;
     @Autowired private KhuyenMaiRepository khuyenMaiRepository;
+    @Autowired private PhieuNhapHangRepository phieuNhapHangRepository;
 
     // 1. TRANG DASHBOARD ADMIN MAIN
     @GetMapping("/trang-admin")
@@ -741,6 +744,20 @@ public class AdminController {
         return String.format("NCC%03d", max + 1);
     }
 
+    // Tự động tạo mã Phiếu Nhập Hàng tăng dần (PNH001, PNH002...)
+    private synchronized String generateMaPNH() {
+        PhieuNhapHang last = phieuNhapHangRepository.findTopByOrderByMaPNHDesc();
+        if (last == null || last.getMaPNH() == null) {
+            return "PNH001";
+        }
+        try {
+            int next = Integer.parseInt(last.getMaPNH().substring(3)) + 1;
+            return String.format("PNH%03d", next);
+        } catch (Exception e) {
+            return "PNH" + System.currentTimeMillis() % 1000000;
+        }
+    }
+
     // CÁCH 1: XỬ LÝ NHẬP THỦ CÔNG & THÊM NCC MỚI NẾU TÍCH CHỌN
     @PostMapping("/nhap-thu-cong")
     @Transactional
@@ -751,6 +768,8 @@ public class AdminController {
                                   @RequestParam(value = "tenNCCMoi", required = false) String tenNCCMoi,
                                   @RequestParam(value = "sdtNCCMoi", required = false) String sdtNCCMoi,
                                   @RequestParam(value = "diaChiNCCMoi", required = false) String diaChiNCCMoi,
+                                  @RequestParam(value = "thueVAT", defaultValue = "10") BigDecimal thueVATPct,
+                                  @RequestParam(value = "chietKhau", defaultValue = "0") BigDecimal chietKhauPct,
                                   RedirectAttributes redirectAttributes) {
         try {
             // Nếu người dùng chọn nhập Nhà Cung Cấp mới
@@ -770,28 +789,46 @@ public class AdminController {
                 sp.setMaNCC(newMaNCC);
             }
 
+            // Lưu sản phẩm, mô tả, hình ảnh
             adminService.nhapHangThuCong(sp, mt, fileAnh);
-            redirectAttributes.addFlashAttribute("Success", "Thêm sản phẩm thành công!");
+
+            // ===== TẠO PHIẾU NHẬP HÀNG TỰ ĐỘNG =====
+            String maNCC = sp.getMaNCC();
+            if (maNCC != null && !maNCC.trim().isEmpty()) {
+                LocalDateTime now = LocalDateTime.now();
+
+                // Tính tổng tiền hàng = giá × số lượng
+                BigDecimal tongHang = BigDecimal.ZERO;
+                if (sp.getDonGiaSP() != null && sp.getSoLuongTon() != null) {
+                    tongHang = sp.getDonGiaSP()
+                            .multiply(BigDecimal.valueOf(sp.getSoLuongTon()));
+                }
+
+                // Tính tiền VAT và chiết khấu từ %
+                BigDecimal tienVAT   = tongHang.multiply(thueVATPct)
+                        .divide(BigDecimal.valueOf(100));
+                BigDecimal tienCK    = tongHang.multiply(chietKhauPct)
+                        .divide(BigDecimal.valueOf(100));
+                BigDecimal tongCong  = tongHang.add(tienVAT).subtract(tienCK);
+
+                PhieuNhapHang phieu = new PhieuNhapHang();
+                phieu.setMaPNH(generateMaPNH());
+                phieu.setMaNCC(maNCC.trim());
+                phieu.setNgayGiao(now);
+                phieu.setNgayNhan(now);
+                phieu.setTrangThaiThanhToan("Chưa thanh toán");
+                phieu.setThueVAT(tienVAT);
+                phieu.setChietKhau(tienCK);
+                phieu.setTongCong(tongCong.toPlainString());
+
+                phieuNhapHangRepository.save(phieu);
+            }
+            // =========================================
+
+            redirectAttributes.addFlashAttribute("Success",
+                    "Thêm sản phẩm thành công! Phiếu nhập hàng đã được tạo tự động.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("Error", "Lỗi nhập hàng: " + e.getMessage());
-        }
-        return "redirect:nhap-hang";
-    }
-
-    // CÁCH 2: XỬ LÝ NHẬP FILE CSV
-    @PostMapping("/nhap-file")
-    public String xuLyNhapTuFile(@RequestParam("fileCSV") MultipartFile fileCSV,
-                                 RedirectAttributes redirectAttributes) {
-        if (fileCSV.isEmpty() || !fileCSV.getOriginalFilename().endsWith(".csv")) {
-            redirectAttributes.addFlashAttribute("Error", "File không hợp lệ. Vui lòng chọn file .csv");
-            return "redirect:nhap-hang";
-        }
-        try {
-            Map<String, Integer> res = adminService.nhapHangTuCSV(fileCSV);
-            redirectAttributes.addFlashAttribute("Success",
-                    String.format("Hoàn tất! Đã thêm mới %d SP và Cập nhật kho %d SP.", res.get("new"), res.get("update")));
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("Error", "Lỗi đọc file: " + e.getMessage());
         }
         return "redirect:nhap-hang";
     }
@@ -1013,11 +1050,11 @@ public class AdminController {
     private boolean coDuLieuMoTa(MoTa moTa) {
         return moTa != null
                 && (coGiaTri(moTa.getRam())
-                        || coGiaTri(moTa.getCpu())
-                        || coGiaTri(moTa.getRom())
-                        || coGiaTri(moTa.getManHinh())
-                        || coGiaTri(moTa.getVga())
-                        || coGiaTri(moTa.getKhac()));
+                || coGiaTri(moTa.getCpu())
+                || coGiaTri(moTa.getRom())
+                || coGiaTri(moTa.getManHinh())
+                || coGiaTri(moTa.getVga())
+                || coGiaTri(moTa.getKhac()));
     }
 
     private void chuanHoaMoTa(MoTa moTa) {
